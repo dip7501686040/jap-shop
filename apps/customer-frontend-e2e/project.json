@@ -1,0 +1,10 @@
+{
+  "name": "customer-frontend-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/customer-frontend-e2e/src",
+  "tags": [],
+  "implicitDependencies": ["customer-frontend"],
+  "// targets": "to see all targets run: nx show project customer-frontend-e2e --web",
+  "targets": {}
+}

@@ -1,0 +1,17 @@
+{
+  "name": "customer-frontend",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/customer-frontend",
+  "projectType": "application",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project customer-frontend --web",
+  "targets": {
+    "serve": {
+      "executor": "@nx/next:server",
+      "options": {
+        "buildTarget": "customer-frontend:build",
+        "port": 4001
+      }
+    }
+  }
+}

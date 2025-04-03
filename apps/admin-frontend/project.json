@@ -1,0 +1,17 @@
+{
+  "name": "admin-frontend",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/admin-frontend",
+  "projectType": "application",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project admin-frontend --web",
+  "targets": {
+    "serve": {
+      "executor": "@nx/next:server",
+      "options": {
+        "buildTarget": "admin-frontend:build",
+        "port": 4000
+      }
+    }
+  }
+}
