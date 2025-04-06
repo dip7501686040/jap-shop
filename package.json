@@ -1,0 +1,27 @@
+{
+  "name": "jap-shop",
+  "private": true,
+  "scripts": {
+    "start:local": "turbo run start:local",
+    "build:dev": "turbo run build:dev",
+    "start:dev": "turbo run start:dev",
+    "build:staging": "turbo run build:staging",
+    "start:staging": "turbo run start:staging",
+    "build:uat": "turbo run build:uat",
+    "start:uat": "turbo run start:uat",
+    "build:prd": "turbo run build:prd",
+    "start:prd": "turbo run start:prd",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "turbo": "^2.5.0",
+    "typescript": "5.8.2"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18"
+  }
+}

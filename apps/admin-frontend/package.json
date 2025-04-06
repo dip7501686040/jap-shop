@@ -1,0 +1,34 @@
+{
+  "name": "admin-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start:local": "APP_ENV=dev next dev --turbopack",
+    "build:dev": "APP_ENV=dev next build",
+    "start:dev": "APP_ENV=dev next start",
+    "build:staging": "APP_ENV=staging next build",
+    "start:staging": "APP_ENV=staging next start",
+    "build:uat": "APP_ENV=uat next build",
+    "start:uat": "APP_ENV=uat next start",
+    "build:prd": "APP_ENV=prd next build",
+    "start:prd": "APP_ENV=prd next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "next": "15.2.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.2.4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

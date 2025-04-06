@@ -1,0 +1,52 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "tasks": {
+    "start:local": {
+      "cache": false,
+      "persistent": true
+    },
+    "build:dev": {
+      "dependsOn": ["^build:dev"],
+      "inputs": ["$TURBO_DEFAULT$", ".env.dev"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "start:dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build:staging": {
+      "dependsOn": ["^build:staging"],
+      "inputs": ["$TURBO_DEFAULT$", ".env.staging"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "start:staging": {
+      "cache": false,
+      "persistent": true
+    },
+    "build:uat": {
+      "dependsOn": ["^build:uat"],
+      "inputs": ["$TURBO_DEFAULT$", ".env.uat"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "start:uat": {
+      "cache": false,
+      "persistent": true
+    },
+    "build:prd": {
+      "dependsOn": ["^build:prd"],
+      "inputs": ["$TURBO_DEFAULT$", ".env.prd"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "start:prd": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"]
+    }
+  }
+}
