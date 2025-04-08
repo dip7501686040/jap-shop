@@ -1,12 +1,10 @@
 name: Docker Build & Push (Turbo Affected - apps/* only)
-
 on:
   push:
     branches: [dev]
   pull_request:
     branches: [dev]
     types: [closed]
-
 jobs:
   detect-affected:
     runs-on: ubuntu-latest
@@ -16,35 +14,27 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
-
       - name: Install pnpm
         run: npm install -g pnpm
-
       - name: Install dependencies
         run: pnpm install
-
       - name: Run turbo build:dev and detect affected apps/*
         id: set
         run: |
           echo "🔧 Running turbo build:dev via pnpm..."
           pnpm run build:dev
-
           echo "🔍 Detecting affected apps..."
           CHANGED=$(turbo run build:dev --affected --dry=json | jq -r '.packages[].name' | grep '^apps/' | sed 's/^apps\///')
-
-          echo "Changed raw:\n$CHANGED"
-
+          echo "Changed raw:"
+          echo "$CHANGED"
           # Convert newline list to JSON array, remove empty lines
           JSON_ARRAY=$(echo "$CHANGED" | sed '/^$/d' | jq -R -s -c 'split("\n")[:-1]')
-
           echo "Changed JSON: $JSON_ARRAY"
           echo "changed_json=$JSON_ARRAY" >> $GITHUB_OUTPUT
-
   build-and-push:
     needs: detect-affected
     if: needs.detect-affected.outputs.changed_json != '[]'
@@ -52,35 +42,28 @@ jobs:
     strategy:
       matrix:
         service: ${{ fromJSON(needs.detect-affected.outputs.changed_json) }}
-
     steps:
       - uses: actions/checkout@v3
-
       - name: Debug service name
         run: echo "🔧 Building service: ${{ matrix.service }}"
-
       - name: Validate service name
         run: |
           if [ -z "${{ matrix.service }}" ]; then
             echo "❌ matrix.service is empty. Failing..."
             exit 1
           fi
-
       - name: Set environment
         run: |
           echo "SERVICE_NAME=${{ matrix.service }}" >> $GITHUB_ENV
           echo "TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
-
       - name: Docker Login
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-
       - name: Build Docker image
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/jap-shop-${{ env.SERVICE_NAME }}:${{ env.TAG }} ./apps/${{ env.SERVICE_NAME }}
-
       - name: Push Docker image
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/jap-shop-${{ env.SERVICE_NAME }}:${{ env.TAG }}
