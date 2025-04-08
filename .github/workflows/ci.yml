@@ -45,7 +45,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Debug service name
-        run: echo "🔧 Building service: ${{ matrix.service }}"
+        run: 'echo "🔧 Building service: ${{ matrix.service }}"'
       - name: Validate service name
         run: |
           if [ -z "${{ matrix.service }}" ]; then
