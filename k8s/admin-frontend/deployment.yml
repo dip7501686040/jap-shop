@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jap-shop-admin-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: jap-shop-admin-frontend
+  template:
+    metadata:
+      labels:
+        app: jap-shop-admin-frontend
+    spec:
+      containers:
+        - name: jap-shop-admin-frontend
+          image: docker.io/dip75016860/jap-shop-admin-frontend:dev
+          ports:
+            - containerPort: 3000
