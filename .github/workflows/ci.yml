@@ -35,11 +35,14 @@ jobs:
           pnpm run build:dev
 
           echo "🔍 Detecting affected apps..."
-          CHANGED=$(turbo run build:dev --dry=json | jq -r '.packages[].name' | grep '^apps/' | sed 's/^apps\///')
+          CHANGED=$(turbo run build:dev --affected --dry=json | jq -r '.packages[].name' | grep '^apps/' | sed 's/^apps\///')
 
-          # Convert newline list to JSON array
-          JSON_ARRAY=$(echo "$CHANGED" | jq -R -s -c 'split("\n")[:-1]')
-          echo "Changed apps JSON: $JSON_ARRAY"
+          echo "Changed raw:\n$CHANGED"
+
+          # Convert newline list to JSON array, remove empty lines
+          JSON_ARRAY=$(echo "$CHANGED" | sed '/^$/d' | jq -R -s -c 'split("\n")[:-1]')
+
+          echo "Changed JSON: $JSON_ARRAY"
           echo "changed_json=$JSON_ARRAY" >> $GITHUB_OUTPUT
 
   build-and-push:
@@ -52,6 +55,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Debug service name
+        run: echo "🔧 Building service: ${{ matrix.service }}"
+
+      - name: Validate service name
+        run: |
+          if [ -z "${{ matrix.service }}" ]; then
+            echo "❌ matrix.service is empty. Failing..."
+            exit 1
+          fi
 
       - name: Set environment
         run: |
