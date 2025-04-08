@@ -11,7 +11,7 @@ jobs:
   detect-affected:
     runs-on: ubuntu-latest
     outputs:
-      changed: ${{ steps.set.outputs.changed }}
+      changed_json: ${{ steps.set.outputs.changed_json }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -35,21 +35,20 @@ jobs:
           pnpm run build:dev
 
           echo "🔍 Detecting affected apps..."
-          CHANGED=$(pnpm turbo run build:dev --dry=json | jq -r '.packages[].name' | grep '^apps/')
-          echo "Changed apps: $CHANGED"
+          CHANGED=$(turbo run build:dev --dry=json | jq -r '.packages[].name' | grep '^apps/' | sed 's/^apps\///')
 
-          # Convert to comma-separated list
-          CHANGED_CSV=$(echo "$CHANGED" | sed 's/^apps\///' | tr '\n' ',' | sed 's/,$//')
-          echo "CSV: $CHANGED_CSV"
-          echo "changed=$CHANGED_CSV" >> $GITHUB_OUTPUT
+          # Convert newline list to JSON array
+          JSON_ARRAY=$(echo "$CHANGED" | jq -R -s -c 'split("\n")[:-1]')
+          echo "Changed apps JSON: $JSON_ARRAY"
+          echo "changed_json=$JSON_ARRAY" >> $GITHUB_OUTPUT
 
   build-and-push:
     needs: detect-affected
-    if: needs.detect-affected.outputs.changed != ''
+    if: needs.detect-affected.outputs.changed_json != '[]'
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: ${{ split(',', needs.detect-affected.outputs.changed) }}
+        service: ${{ fromJSON(needs.detect-affected.outputs.changed_json) }}
 
     steps:
       - uses: actions/checkout@v3
