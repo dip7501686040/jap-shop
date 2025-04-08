@@ -1,0 +1,74 @@
+name: Docker Build & Push (Turbo Affected - apps/* only)
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+    types: [closed]
+
+jobs:
+  detect-affected:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.set.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run turbo build:dev and detect affected apps/*
+        id: set
+        run: |
+          echo "🔧 Running turbo build:dev via pnpm..."
+          pnpm run build:dev
+
+          echo "🔍 Detecting affected apps..."
+          CHANGED=$(pnpm turbo run build:dev --dry=json | jq -r '.packages[].name' | grep '^apps/')
+          echo "Changed apps: $CHANGED"
+
+          # Convert to comma-separated list
+          CHANGED_CSV=$(echo "$CHANGED" | sed 's/^apps\///' | tr '\n' ',' | sed 's/,$//')
+          echo "CSV: $CHANGED_CSV"
+          echo "changed=$CHANGED_CSV" >> $GITHUB_OUTPUT
+
+  build-and-push:
+    needs: detect-affected
+    if: needs.detect-affected.outputs.changed != ''
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ${{ fromJson('["' + needs.detect-affected.outputs.changed + '"]') }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set environment
+        run: |
+          echo "SERVICE_NAME=${{ matrix.service }}" >> $GITHUB_ENV
+          echo "TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
+      - name: Docker Login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/jap-shop-${{ env.SERVICE_NAME }}:${{ env.TAG }} ./apps/${{ env.SERVICE_NAME }}
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/jap-shop-${{ env.SERVICE_NAME }}:${{ env.TAG }}

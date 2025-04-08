@@ -1,0 +1,21 @@
+version: '3.9'
+services:
+  admin-frontend:
+    build:
+      context: ./apps/admin-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - APP_ENV=dev
+    depends_on:
+      - api-gateway-service
+
+  api-gateway-service:
+    build:
+      context: ./apps/api-gateway-service
+      dockerfile: Dockerfile
+    ports:
+      - "4001:4001"
+    environment:
+      - NODE_ENV=dev
