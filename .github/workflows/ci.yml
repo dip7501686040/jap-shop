@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: ${{ fromJson('["' + needs.detect-affected.outputs.changed + '"]') }}
+        service: ${{ split(',', needs.detect-affected.outputs.changed) }}
 
     steps:
       - uses: actions/checkout@v3
