@@ -1,0 +1,7 @@
+.git
+out/
+.turbo
+dist
+node_modules
+.gitignore
+README.md
