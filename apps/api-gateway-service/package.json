@@ -22,8 +22,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "docker:build": "docker build -t $DOCKER_USERNAME/jap-shop-api-gateway-service:dev .",
-    "docker:push": "docker push $DOCKER_USERNAME/jap-shop-api-gateway-service:dev"
+    "docker:build:dev": "docker build -t $DOCKER_USERNAME/jap-shop-api-gateway-service:dev .",
+    "docker:push:dev": "docker push $DOCKER_USERNAME/jap-shop-api-gateway-service:dev"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
