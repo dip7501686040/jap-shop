@@ -12,7 +12,9 @@
     "start:uat": "APP_ENV=uat next start",
     "build:prd": "APP_ENV=prd next build",
     "start:prd": "APP_ENV=prd next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "docker:build:dev": "docker build -t $DOCKER_USERNAME/jap-shop-admin-frontend:dev .",
+    "docker:push:dev": "docker push $DOCKER_USERNAME/jap-shop-admin-frontend:dev"
   },
   "dependencies": {
     "dotenv": "^16.4.7",

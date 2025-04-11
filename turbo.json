@@ -47,6 +47,12 @@
     },
     "check-types": {
       "dependsOn": ["^check-types"]
+    },
+    "docker:build:dev": {
+      "dependsOn": ["^docker:build:dev"]
+    },
+    "docker:push:dev": {
+      "dependsOn": ["^docker:push:dev"]
     }
   }
 }
