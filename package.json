@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "start:local": "turbo run start:local",
-    "build:dev": "turbo run build:dev --affected",
+    "build:dev": "TURBO_SCM_BASE=dev turbo run build:dev --affected",
     "start:dev": "turbo run start:dev",
     "build:staging": "turbo run build:staging",
     "start:staging": "turbo run start:staging",

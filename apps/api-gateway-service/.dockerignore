@@ -1,4 +1,7 @@
-node_modules
-Dockerfile*
-docker-compose.yml
 .git
+out/
+.turbo
+dist
+node_modules
+.gitignore
+README.md
