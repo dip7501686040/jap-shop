@@ -7,7 +7,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') || 4000;
   console.log(
-    `API Gateway Service is running on port ${port} with env ${configService.get<string>('ENV')} test test`,
+    `API Gateway Service is running on port ${port} with env ${configService.get<string>('ENV')} test change`,
   );
   await app.listen(port);
 }
