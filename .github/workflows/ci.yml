@@ -10,6 +10,7 @@ on:
 
 jobs:
   docker:
+    name: Docker CI
     runs-on: ubuntu-latest
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
@@ -26,6 +27,7 @@ jobs:
           node-version: 20
 
       - run: npm install -g pnpm
+      - run: npm install -g turbo
       - run: pnpm install
 
       - name: Log in to Docker Hub
