@@ -28,8 +28,14 @@ jobs:
         with:
           node-version: '18'
           
-      - name: Install Turborepo
-        run: npm install -g turbo
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+
+      - name: Install dependencies
+        run: pnpm install
       
       - name: Log in to Docker Hub
         run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
