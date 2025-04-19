@@ -62,7 +62,7 @@ export default function SignupPage() {
           <div className="max-w-md w-full space-y-8 text-white">
             <div className="text-center">
               <h1 className="text-4xl font-bold mb-6">Join Our Team</h1>
-              <p className="text-xl mb-10">Create an account to access the admin dashboard and manage your content 111111</p>
+              <p className="text-xl mb-10">Create an account to access the admin dashboard and manage your content 1111111</p>
               <div className="flex justify-center">
                 <Image src="/file.svg" alt="Documents illustration" width={300} height={300} className="text-white" />
               </div>
