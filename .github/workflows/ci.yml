@@ -15,24 +15,17 @@ jobs:
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-
+    outputs:
+      affected_apps: ${{ steps.set-affected-apps.outputs.affected_apps }}
+    
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
-      - name: Set up Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20
-
-      - run: npm install -g pnpm
-      - run: npm install -g turbo
-      - run: pnpm install
-
+      
       - name: Log in to Docker Hub
         run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-
+      
       - name: Determine base commit
         id: base
         run: |
@@ -42,11 +35,29 @@ jobs:
             BASE_SHA=$(git rev-parse HEAD^)
           fi
           echo "BASE_SHA=$BASE_SHA" >> $GITHUB_ENV
-
+      
+      - name: Determine affected apps
+        id: set-affected-apps
+        run: |
+          AFFECTED=$(TURBO_SCM_BASE=$BASE_SHA turbo ls --affected --output=json | jq '[.packages.items[].name]')
+          echo "Affected apps: $AFFECTED"
+          echo "affected_apps=$AFFECTED" >> $GITHUB_OUTPUT
+      
       - name: Build Docker Images for Affected Apps
         run: |
           TURBO_SCM_BASE=$BASE_SHA turbo run docker:build:dev --affected
-
+      
       - name: Push Docker Images for Affected Apps
         run: |
           TURBO_SCM_BASE=$BASE_SHA turbo run docker:push:dev --affected
+          
+      - name: Create affected apps artifact file
+        run: |
+          echo '${{ steps.set-affected-apps.outputs.affected_apps }}' > affected-apps.json
+          
+      - name: Upload affected apps as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: affected-apps
+          path: affected-apps.json
+          retention-days: 1

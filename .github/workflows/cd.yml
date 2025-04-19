@@ -1,0 +1,38 @@
+name: Kubernetes Deploy (Dev)
+
+on:
+  workflow_run:
+    workflows: ["Docker CI (Dev)"]
+    types:
+      - completed
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    name: Deploy to Kubernetes
+    runs-on: self-hosted
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+      - name: Download workflow artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: Docker CI (Dev)
+          run_id: ${{ github.event.workflow_run.id }}
+          name: affected-apps
+          path: ./artifacts
+      
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          sparse-checkout: k8s
+          sparse-checkout-cone-mode: false
+      
+      - name: Deploy affected apps to Kubernetes
+        run: |
+          AFFECTED=$(cat ./artifacts/affected-apps.json)
+          for app_name in $(echo $AFFECTED | jq -r '.[]'); do
+            echo "Applying Kubernetes configuration for $app_name"
+            kubectl apply -f k8s/$app_name
+          done
