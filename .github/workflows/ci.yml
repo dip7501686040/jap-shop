@@ -56,7 +56,7 @@ jobs:
           echo '${{ steps.set-affected-apps.outputs.affected_apps }}' > affected-apps.json
           
       - name: Upload affected apps as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: affected-apps
           path: affected-apps.json
