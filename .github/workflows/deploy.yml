@@ -1,10 +1,6 @@
 name: Kubernetes Deploy
 
 on:
-  workflow_run:
-    workflows: ["Docker CI"]
-    types:
-      - completed
   workflow_dispatch:
         
 jobs:
