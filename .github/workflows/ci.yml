@@ -45,10 +45,13 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             BASE_SHA=$(git merge-base origin/dev HEAD)
+            echo "$(git rev-parse HEAD): $BASE_SHA"
           else
             BASE_SHA=$(git rev-parse HEAD^)
+          echo "$(git rev-parse HEAD^): $BASE_SHA"
           fi
           echo "BASE_SHA=$BASE_SHA" >> $GITHUB_ENV
+          echo "BASE_SHA: $BASE_SHA"
       
       - name: Determine affected apps
         id: set-affected-apps
