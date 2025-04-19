@@ -7,21 +7,24 @@ on:
       - completed
     branches:
       - dev
+  workflow_dispatch:
         
 jobs:
   deploy:
     name: Deploy to Kubernetes
     runs-on: self-hosted
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     
     steps:
       - name: Download workflow artifact
         uses: dawidd6/action-download-artifact@v2
+        if: ${{ github.event_name == 'workflow_run' }}
         with:
           workflow: Docker CI
           run_id: ${{ github.event.workflow_run.id }}
           name: affected-apps
           path: ./artifacts
+          github_token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -33,10 +36,8 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "workflow_run" ]; then
             AFFECTED=$(cat ./artifacts/affected-apps.json)
-          elif [ -n "${{ inputs.apps }}" ]; then
-            AFFECTED='${{ inputs.apps }}'
           else
-            # If no apps specified, use all apps in k8s directory
+            # For manual runs, deploy all apps in k8s directory
             AFFECTED=$(find k8s/* -type d -maxdepth 0 | xargs -n1 basename | jq -R -s -c 'split("\n") | map(select(length > 0))')
           fi
           
