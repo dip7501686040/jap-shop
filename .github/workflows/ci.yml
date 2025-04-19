@@ -44,10 +44,10 @@ jobs:
         id: base
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BASE_SHA=git merge-base origin/dev HEAD
+            BASE_SHA=$(git merge-base origin/dev HEAD)
             echo "git merge-base origin/dev HEAD: $BASE_SHA"
           else
-            BASE_SHA=git rev-parse HEAD^
+            BASE_SHA=$(git rev-parse HEAD^)
           echo "git rev-parse HEAD^: $BASE_SHA"
           fi
           echo "BASE_SHA=$BASE_SHA" >> $GITHUB_ENV
@@ -56,17 +56,17 @@ jobs:
       - name: Determine affected apps
         id: set-affected-apps
         run: |
-          AFFECTED=$(TURBO_SCM_BASE=$($BASE_SHA) npx turbo ls --affected --output=json | jq '[.packages.items[].name]')
+          AFFECTED=$(TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo ls --affected --output=json | jq '[.packages.items[].name]')
           echo "Affected apps: $AFFECTED"
           echo "affected_apps=$AFFECTED" >> $GITHUB_OUTPUT
       
       - name: Build Docker Images for Affected Apps
         run: |
-          TURBO_SCM_BASE=$($BASE_SHA) npx turbo run docker:build:dev --affected
+          TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo run docker:build:dev --affected
       
       - name: Push Docker Images for Affected Apps
         run: |
-          TURBO_SCM_BASE=$($BASE_SHA) npx turbo run docker:push:dev --affected
+          TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo run docker:push:dev --affected
           
       - name: Create affected apps artifact file
         run: |
