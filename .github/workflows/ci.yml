@@ -56,17 +56,24 @@ jobs:
       - name: Determine affected apps
         id: set-affected-apps
         run: |
-          AFFECTED=$(TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo ls --affected --output=json | jq '[.packages.items[].name]')
+          # First get all affected packages
+          AFFECTED_ALL=$(TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo ls --affected --output=json | jq -c '.packages.items')
+          # Then filter to only include items in the apps directory
+          AFFECTED=$(echo $AFFECTED_ALL | jq -c '[.[] | select(.dir | startswith("./apps/"))] | map(.name) | select(length > 0)')
           echo "Affected apps: $AFFECTED"
           echo "affected_apps=$AFFECTED" >> $GITHUB_OUTPUT
       
       - name: Build Docker Images for Affected Apps
+        if: ${{ steps.set-affected-apps.outputs.affected_apps != '[]' && steps.set-affected-apps.outputs.affected_apps != '' }}
         run: |
-          TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo run docker:build:dev --affected
+          # Use scope to limit to apps directory only
+          TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo run docker:build:dev --scope="./apps/*" --affected
       
       - name: Push Docker Images for Affected Apps
+        if: ${{ steps.set-affected-apps.outputs.affected_apps != '[]' && steps.set-affected-apps.outputs.affected_apps != '' }}
         run: |
-          TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo run docker:push:dev --affected
+          # Use scope to limit to apps directory only
+          TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo run docker:push:dev --scope="./apps/*" --affected
           
       - name: Create affected apps artifact file
         run: |
