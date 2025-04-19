@@ -1,13 +1,13 @@
-name: Kubernetes Deploy (Dev)
+name: Kubernetes Deploy
 
 on:
   workflow_run:
-    workflows: ["Docker CI (Dev)"]
+    workflows: ["Docker CI"]
     types:
       - completed
     branches:
       - dev
-
+        
 jobs:
   deploy:
     name: Deploy to Kubernetes
@@ -18,7 +18,7 @@ jobs:
       - name: Download workflow artifact
         uses: dawidd6/action-download-artifact@v2
         with:
-          workflow: Docker CI (Dev)
+          workflow: Docker CI
           run_id: ${{ github.event.workflow_run.id }}
           name: affected-apps
           path: ./artifacts
@@ -31,7 +31,16 @@ jobs:
       
       - name: Deploy affected apps to Kubernetes
         run: |
-          AFFECTED=$(cat ./artifacts/affected-apps.json)
+          if [ "${{ github.event_name }}" == "workflow_run" ]; then
+            AFFECTED=$(cat ./artifacts/affected-apps.json)
+          elif [ -n "${{ inputs.apps }}" ]; then
+            AFFECTED='${{ inputs.apps }}'
+          else
+            # If no apps specified, use all apps in k8s directory
+            AFFECTED=$(find k8s/* -type d -maxdepth 0 | xargs -n1 basename | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          fi
+          
+          echo "Deploying apps: $AFFECTED"
           for app_name in $(echo $AFFECTED | jq -r '.[]'); do
             echo "Applying Kubernetes configuration for $app_name"
             kubectl apply -f k8s/$app_name
