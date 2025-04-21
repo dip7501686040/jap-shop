@@ -2,15 +2,6 @@ name: Kubernetes Deploy
 
 on:
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy to'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-          - dev
-          - production
         
 jobs:
   deploy:
@@ -35,16 +26,8 @@ jobs:
           sparse-checkout: k8s
           sparse-checkout-cone-mode: false
       
-      - name: Deploy namespace
-        run: |
-          ENVIRONMENT="${{ github.event.inputs.environment || 'dev' }}"
-          if [ "$ENVIRONMENT" == "production" ]; then
-            kubectl apply -f k8s/namespace-production.yml
-          fi
-      
       - name: Deploy affected apps to Kubernetes
         run: |
-          ENVIRONMENT="${{ github.event.inputs.environment || 'dev' }}"
           if [ "${{ github.event_name }}" == "workflow_run" ]; then
             AFFECTED=$(cat ./artifacts/affected-apps.json)
           else
@@ -52,24 +35,8 @@ jobs:
             AFFECTED=$(find k8s/* -type d -maxdepth 0 | xargs -n1 basename | jq -R -s -c 'split("\n") | map(select(length > 0))')
           fi
           
-          echo "Deploying apps to $ENVIRONMENT environment: $AFFECTED"
+          echo "Deploying apps: $AFFECTED"
           for app_name in $(echo $AFFECTED | jq -r '.[]'); do
-            if [ -d "k8s/$app_name" ]; then
-              echo "Applying Kubernetes configuration for $app_name"
-              if [ "$ENVIRONMENT" == "production" ]; then
-                # Apply production-specific manifests if they exist
-                kubectl apply -f k8s/$app_name/*-prod.yml 2>/dev/null || true
-                kubectl apply -f k8s/$app_name/* -l namespace=production 2>/dev/null || true
-              else
-                # Apply dev manifests
-                kubectl apply -f k8s/$app_name/* -l namespace!=production 2>/dev/null || true
-                kubectl apply -f k8s/$app_name/* -l namespace=dev 2>/dev/null || true
-              fi
-            fi
+            echo "Applying Kubernetes configuration for $app_name"
+            kubectl apply -f k8s/$app_name
           done
-      
-      - name: Deploy ingress
-        if: ${{ github.event.inputs.environment == 'production' }}
-        run: |
-          echo "Applying ingress configuration for production"
-          kubectl apply -f k8s/ingress/
