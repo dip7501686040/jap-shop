@@ -4,7 +4,7 @@ metadata:
   name: jap-shop-admin-frontend
   namespace: dev
 spec:
-  replicas: 2
+  replicas: 1  # Must be 1 due to hostPort usage
   selector:
     matchLabels:
       app: jap-shop-admin-frontend
@@ -18,3 +18,4 @@ spec:
           image: docker.io/dip75016860/jap-shop-admin-frontend:dev
           ports:
             - containerPort: 3000
+              hostPort: 80

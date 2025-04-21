@@ -4,7 +4,7 @@ metadata:
   name: jap-shop-api-gateway-service
   namespace: dev
 spec:
-  replicas: 2
+  replicas: 1  # Must be 1 due to hostPort usage
   selector:
     matchLabels:
       app: jap-shop-api-gateway-service
@@ -18,3 +18,4 @@ spec:
           image: docker.io/dip75016860/jap-shop-api-gateway-service:dev
           ports:
             - containerPort: 4001
+              hostPort: 4001
