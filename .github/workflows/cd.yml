@@ -1,82 +1,60 @@
-name: Kubernetes Deploy
-
-on:
-  workflow_run:
-    workflows: ["Docker CI"]
-    types:
-      - completed
-    branches:
-      - dev
-  workflow_dispatch:
-        
 jobs:
   deploy:
     name: Deploy to Kubernetes
     runs-on: self-hosted
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-    
+
     steps:
-      - name: Download workflow artifact
-        uses: dawidd6/action-download-artifact@v2
-        if: ${{ github.event_name == 'workflow_run' }}
-        with:
-          workflow: Docker CI
-          run_id: ${{ github.event.workflow_run.id }}
-          name: affected-apps
-          path: ./artifacts
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-      
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           sparse-checkout: k8s
           sparse-checkout-cone-mode: false
-      
-      - name: Deploy affected apps to Kubernetes
+
+      - name: Download workflow artifact
+        if: ${{ github.event_name == 'workflow_run' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: affected-apps
+          path: artifacts  # Make sure this matches the path you're using below
+
+      - name: Read affected apps
+        id: affected
         run: |
           if [ "${{ github.event_name }}" == "workflow_run" ]; then
-            # Check if the file exists and is not empty
-            if [ -s "./artifacts/affected-apps.json" ]; then
-              # Check if the file contains an empty array
-              EMPTY_CHECK=$(cat ./artifacts/affected-apps.json | jq 'length == 0')
-              if [ "$EMPTY_CHECK" == "true" ]; then
-                echo "Affected apps list is empty. Nothing to deploy."
-                exit 0
-              fi
-              
-              # Only read the file if we've confirmed it's not an empty array
-              AFFECTED=$(cat ./artifacts/affected-apps.json)
-            else
-              echo "Artifact file is empty or not found. Nothing to deploy."
+            FILE="artifacts/affected-apps.json"
+            if [ ! -s "$FILE" ]; then
+              echo "❌ Artifact file is missing or empty. Nothing to deploy."
+              exit 0
+            fi
+
+            AFFECTED=$(cat $FILE)
+            EMPTY=$(echo "$AFFECTED" | jq 'length == 0')
+            if [ "$EMPTY" == "true" ]; then
+              echo "✅ No affected apps to deploy."
               exit 0
             fi
           else
-            # For manual runs, deploy all apps in k8s directory
             AFFECTED=$(find k8s/* -type d -maxdepth 0 | xargs -n1 basename | jq -R -s -c 'split("\n") | map(select(length > 0))')
           fi
-          
-          echo "Deploying apps: $AFFECTED"
-          for app_name in $(echo $AFFECTED | jq -r '.[]'); do
-            echo "Applying Kubernetes configuration for $app_name"
+
+          echo "Affected apps: $AFFECTED"
+          echo "affected=$AFFECTED" >> $GITHUB_OUTPUT
+
+      - name: Deploy affected apps to Kubernetes
+        run: |
+          AFFECTED=${{ steps.affected.outputs.affected }}
+          echo "🔧 Deploying apps: $AFFECTED"
+          for app_name in $(echo "$AFFECTED" | jq -r '.[]'); do
+            echo "➡️ Applying Kubernetes config for $app_name"
             kubectl apply -f k8s/$app_name
-          done
-          
-          # Check if pods are running before setting up port forwarding
-          echo "Checking if pods are running..."
-          for app_name in $(echo $AFFECTED | jq -r '.[]'); do
-            echo "Checking pods for $app_name"
-            # Wait for pods to be ready with a timeout of 300 seconds (5 minutes)
-            kubectl wait --for=condition=ready pods -l app=jap-shop-$app_name -n dev --timeout=300s
-            
-            if [ $? -eq 0 ]; then
-              echo "Pods for $app_name are running"
-            else
-              echo "Warning: Pods for $app_name may not be running properly"
-              # Continue with next app if this one failed
+
+            echo "🔍 Waiting for pods to be ready..."
+            kubectl wait --for=condition=ready pods -l app=jap-shop-$app_name -n dev --timeout=300s || {
+              echo "⚠️ Pods for $app_name are not ready. Skipping port-forward."
               continue
-            fi
-            
-            # Set up port forwarding for successfully deployed app
-            echo "Setting up port forwarding for $app_name"
-            nohup kubectl port-forward service/jap-shop-$app_name 3000:80 -n dev --address 0.0.0.0 &
+            }
+
+            echo "🔄 Port forwarding for $app_name"
+            nohup kubectl port-forward svc/jap-shop-$app_name 3000:80 -n dev --address 0.0.0.0 &
           done
