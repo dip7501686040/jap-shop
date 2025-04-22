@@ -59,12 +59,10 @@ jobs:
           echo "affected_apps=$AFFECTED" >> $GITHUB_OUTPUT
       
       - name: Build Docker Images for Affected Apps
-        if: ${{ fromJson(steps.set-affected-apps.outputs.affected_apps)[0] != null }}
         run: |
           TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo run docker:build:dev --affected
       
       - name: Push Docker Images for Affected Apps
-        if: ${{ fromJson(steps.set-affected-apps.outputs.affected_apps)[0] != null }}
         run: |
           TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo run docker:push:dev --affected
           
