@@ -2,6 +2,10 @@ name: Kubernetes Deploy
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Kubernetes Deploy"]
+    types:
+      - completed
         
 jobs:
   deploy:
