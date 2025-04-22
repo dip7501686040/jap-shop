@@ -1,14 +1,14 @@
 name: Kubernetes Deploy
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: ["Docker CI"]
     types:
       - completed
     branches:
       - dev
-  workflow_dispatch:
-  
+
 jobs:
   deploy:
     name: Deploy to Kubernetes
@@ -16,58 +16,31 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 
     steps:
+      - name: Download workflow artifact
+        if: ${{ github.event_name == 'workflow_run' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: affected-apps
+          path: ./artifacts
+
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           sparse-checkout: k8s
           sparse-checkout-cone-mode: false
 
-      - name: Download workflow artifact
-        if: ${{ github.event_name == 'workflow_run' }}
-        uses: actions/download-artifact@v4
-        with:
-          name: affected-apps
-          path: artifacts
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
-
-      - name: Debug artifacts
-        if: ${{ github.event_name == 'workflow_run' }}
-        run: |
-          echo "Listing current directory:"
-          ls -la
-          echo "Listing artifacts directory (if exists):"
-          ls -la artifacts || echo "Artifacts directory not found"
-
-      - name: Read affected apps
-        id: affected
+      - name: Deploy affected apps to Kubernetes
         run: |
           if [ "${{ github.event_name }}" == "workflow_run" ]; then
-            FILE="artifacts/affected-apps.json"
-            if [ ! -s "$FILE" ]; then
-              echo "❌ Artifact file is missing or empty. Nothing to deploy."
-              exit 0
-            fi
-
-            AFFECTED=$(cat $FILE)
-            EMPTY=$(echo "$AFFECTED" | jq 'length == 0')
-            if [ "$EMPTY" == "true" ]; then
-              echo "✅ No affected apps to deploy."
-              exit 0
-            fi
+            echo "Reading affected apps from artifact..."
+            AFFECTED=$(cat ./artifacts/affected-apps.json)
           else
+            echo "Manual trigger: deploying all apps"
             AFFECTED=$(find k8s/* -type d -maxdepth 0 | xargs -n1 basename | jq -R -s -c 'split("\n") | map(select(length > 0))')
           fi
 
-          echo "Affected apps: $AFFECTED"
-          echo "affected=$AFFECTED" >> $GITHUB_OUTPUT
-
-      - name: Deploy affected apps to Kubernetes
-        env:
-          AFFECTED: ${{ steps.affected.outputs.affected }}
-        run: |
-          echo "🔧 Deploying apps: $AFFECTED"
+          echo "Deploying apps: $AFFECTED"
           for app_name in $(echo "$AFFECTED" | jq -r '.[]'); do
-            echo "➡️ Applying Kubernetes config for $app_name"
+            echo "Applying Kubernetes configuration for $app_name"
             kubectl apply -f k8s/$app_name
           done
