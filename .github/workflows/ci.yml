@@ -27,9 +27,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          
-      - name: Install Turbo globally
-        run: npm install turbo
       
       - name: Log in to Docker Hub
         run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
@@ -50,7 +47,7 @@ jobs:
       - name: Determine affected apps
         id: set-affected-apps
         run: |
-          AFFECTED=$(TURBO_SCM_BASE=$(git rev-parse HEAD^) turbo ls --affected --output=json | jq -c '[.packages.items[].name]')
+          AFFECTED=$(TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo ls --affected --output=json | jq -c '[.packages.items[].name]')
           # If AFFECTED is null or undefined, set it to an empty array
           if [ "$AFFECTED" = "null" ] || [ -z "$AFFECTED" ]; then
             AFFECTED="[]"
@@ -61,12 +58,12 @@ jobs:
       - name: Build Docker Images for Affected Apps
         if: ${{ fromJson(steps.set-affected-apps.outputs.affected_apps)[0] != null }}
         run: |
-          TURBO_SCM_BASE=$(git rev-parse HEAD^) turbo run docker:build:dev --affected
+          TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo run docker:build:dev --affected
       
       - name: Push Docker Images for Affected Apps
         if: ${{ fromJson(steps.set-affected-apps.outputs.affected_apps)[0] != null }}
         run: |
-          TURBO_SCM_BASE=$(git rev-parse HEAD^) turbo run docker:push:dev --affected
+          TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo run docker:push:dev --affected
           
       - name: Create affected apps artifact file
         run: |
