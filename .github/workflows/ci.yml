@@ -70,7 +70,7 @@ jobs:
       - name: Determine affected apps
         id: set-affected-apps
         run: |
-          AFFECTED=$(TURBO_SCM_BASE=$BASE_SHA pnpm turbo ls --affected --output=json | jq -c '[.packages.items[].name]')
+          AFFECTED=$(TURBO_SCM_BASE=$BASE_SHA turbo ls --affected --output=json | jq -c '[.packages.items[].name]')
           # If AFFECTED is null or undefined, set it to an empty array
           if [ "$AFFECTED" = "null" ] || [ -z "$AFFECTED" ]; then
             AFFECTED="[]"
@@ -81,12 +81,12 @@ jobs:
       - name: Build Docker Images for Affected Apps
         if: ${{ fromJson(steps.set-affected-apps.outputs.affected_apps)[0] != null }}
         run: |
-          TURBO_SCM_BASE=$BASE_SHA pnpm turbo run docker:build:dev --affected
+          TURBO_SCM_BASE=$BASE_SHA turbo run docker:build:dev --affected
       
       - name: Push Docker Images for Affected Apps
         if: ${{ fromJson(steps.set-affected-apps.outputs.affected_apps)[0] != null }}
         run: |
-          TURBO_SCM_BASE=$BASE_SHA pnpm turbo run docker:push:dev --affected
+          TURBO_SCM_BASE=$BASE_SHA turbo run docker:push:dev --affected
           
       - name: Create affected apps artifact file
         run: |
