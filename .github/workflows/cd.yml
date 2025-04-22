@@ -35,7 +35,21 @@ jobs:
       - name: Deploy affected apps to Kubernetes
         run: |
           if [ "${{ github.event_name }}" == "workflow_run" ]; then
-            AFFECTED=$(cat ./artifacts/affected-apps.json)
+            # Check if the file exists and is not empty
+            if [ -s "./artifacts/affected-apps.json" ]; then
+              # Check if the file contains an empty array
+              EMPTY_CHECK=$(cat ./artifacts/affected-apps.json | jq 'length == 0')
+              if [ "$EMPTY_CHECK" == "true" ]; then
+                echo "Affected apps list is empty. Nothing to deploy."
+                exit 0
+              fi
+              
+              # Only read the file if we've confirmed it's not an empty array
+              AFFECTED=$(cat ./artifacts/affected-apps.json)
+            else
+              echo "Artifact file is empty or not found. Nothing to deploy."
+              exit 0
+            fi
           else
             # For manual runs, deploy all apps in k8s directory
             AFFECTED=$(find k8s/* -type d -maxdepth 0 | xargs -n1 basename | jq -R -s -c 'split("\n") | map(select(length > 0))')

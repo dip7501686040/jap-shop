@@ -51,14 +51,20 @@ jobs:
         id: set-affected-apps
         run: |
           AFFECTED=$(TURBO_SCM_BASE=$(git rev-parse HEAD^) turbo ls --affected --output=json | jq -c '[.packages.items[].name]')
+          # If AFFECTED is null or undefined, set it to an empty array
+          if [ "$AFFECTED" = "null" ] || [ -z "$AFFECTED" ]; then
+            AFFECTED="[]"
+          fi
           echo "Affected apps: $AFFECTED"
           echo "affected_apps=$AFFECTED" >> $GITHUB_OUTPUT
       
       - name: Build Docker Images for Affected Apps
+        if: ${{ fromJson(steps.set-affected-apps.outputs.affected_apps)[0] != null }}
         run: |
           TURBO_SCM_BASE=$(git rev-parse HEAD^) turbo run docker:build:dev --affected
       
       - name: Push Docker Images for Affected Apps
+        if: ${{ fromJson(steps.set-affected-apps.outputs.affected_apps)[0] != null }}
         run: |
           TURBO_SCM_BASE=$(git rev-parse HEAD^) turbo run docker:push:dev --affected
           
