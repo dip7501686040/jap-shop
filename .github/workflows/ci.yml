@@ -28,8 +28,28 @@ jobs:
         with:
           node-version: '18'
           
-      - name: Install Turbo
-        run: npm install turbo
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+          
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+          
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+            
+      - name: Install dependencies
+        run: pnpm install
       
       - name: Log in to Docker Hub
         run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
@@ -50,7 +70,7 @@ jobs:
       - name: Determine affected apps
         id: set-affected-apps
         run: |
-          AFFECTED=$(TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo ls --affected --output=json | jq -c '[.packages.items[].name]')
+          AFFECTED=$(TURBO_SCM_BASE=${{ env.BASE_SHA }} pnpm turbo ls --affected --output=json | jq -c '[.packages.items[].name]')
           # If AFFECTED is null or undefined, set it to an empty array
           if [ "$AFFECTED" = "null" ] || [ -z "$AFFECTED" ]; then
             AFFECTED="[]"
@@ -59,12 +79,14 @@ jobs:
           echo "affected_apps=$AFFECTED" >> $GITHUB_OUTPUT
       
       - name: Build Docker Images for Affected Apps
+        if: ${{ fromJson(steps.set-affected-apps.outputs.affected_apps)[0] != null }}
         run: |
-          TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo run docker:build:dev --affected
+          TURBO_SCM_BASE=${{ env.BASE_SHA }} pnpm turbo run docker:build:dev --affected
       
       - name: Push Docker Images for Affected Apps
+        if: ${{ fromJson(steps.set-affected-apps.outputs.affected_apps)[0] != null }}
         run: |
-          TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo run docker:push:dev --affected
+          TURBO_SCM_BASE=${{ env.BASE_SHA }} pnpm turbo run docker:push:dev --affected
           
       - name: Create affected apps artifact file
         run: |
