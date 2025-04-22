@@ -29,7 +29,7 @@ jobs:
           node-version: '18'
           
       - name: Install Turbo globally
-        run: npm install -g turbo
+        run: npm install turbo
       
       - name: Log in to Docker Hub
         run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
