@@ -72,7 +72,7 @@ Next, you can link your Turborepo to your Remote Cache by running the following 
 npx turbo link
 ```
 
-## Useful Links
+## Useful Links t
 
 Learn more about the power of Turborepo:
 
