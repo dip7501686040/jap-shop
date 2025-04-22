@@ -4,9 +4,10 @@ metadata:
   name: jap-shop-api-gateway-service
   namespace: dev
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: jap-shop-api-gateway-service
   ports:
     - port: 4001
       targetPort: 4001
+      nodePort: 32001  # Optional: You can let Kubernetes assign if you omit this

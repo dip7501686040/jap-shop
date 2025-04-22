@@ -4,9 +4,10 @@ metadata:
   name: jap-shop-admin-frontend
   namespace: dev
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: jap-shop-admin-frontend
   ports:
     - port: 80
       targetPort: 3000
+      nodePort: 32080  # Optional: specify your own port between 30000–32767
