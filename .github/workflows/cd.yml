@@ -27,7 +27,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: affected-apps
-          path: artifacts  # Make sure this matches the path you're using below
+          path: artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Debug artifacts
+        if: ${{ github.event_name == 'workflow_run' }}
+        run: |
+          echo "Listing current directory:"
+          ls -la
+          echo "Listing artifacts directory (if exists):"
+          ls -la artifacts || echo "Artifacts directory not found"
 
       - name: Read affected apps
         id: affected
