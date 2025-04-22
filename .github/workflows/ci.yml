@@ -27,6 +27,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+          
+      - name: Install Turbo
+        run: npm install turbo
       
       - name: Log in to Docker Hub
         run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
