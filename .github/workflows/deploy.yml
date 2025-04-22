@@ -40,3 +40,23 @@ jobs:
             echo "Applying Kubernetes configuration for $app_name"
             kubectl apply -f k8s/$app_name
           done
+          
+          # Check if pods are running before setting up port forwarding
+          echo "Checking if pods are running..."
+          for app_name in $(echo $AFFECTED | jq -r '.[]'); do
+            echo "Checking pods for $app_name"
+            # Wait for pods to be ready with a timeout of 300 seconds (5 minutes)
+            kubectl wait --for=condition=ready pods -l app=jap-shop-$app_name -n dev --timeout=300s
+            
+            if [ $? -eq 0 ]; then
+              echo "Pods for $app_name are running"
+            else
+              echo "Warning: Pods for $app_name may not be running properly"
+              # Continue with next app if this one failed
+              continue
+            fi
+            
+            # Set up port forwarding for successfully deployed app
+            echo "Setting up port forwarding for $app_name"
+            nohup kubectl port-forward service/jap-shop-$app_name 3000:80 -n dev --address 0.0.0.0 &
+          done
