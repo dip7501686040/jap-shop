@@ -19,15 +19,15 @@ jobs:
       affected_apps: ${{ steps.set-affected-apps.outputs.affected_apps }}
     
     steps:
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false  # optional, skips auto-install so you can do it manually if needed
+
       - uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'pnpm'
-
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-          run_install: false
 
       - name: Restore pnpm store
         uses: actions/cache@v3
