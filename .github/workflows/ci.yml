@@ -91,6 +91,8 @@ jobs:
       - name: Create affected apps artifact file
         run: |
           echo '${{ steps.set-affected-apps.outputs.affected_apps }}' > affected-apps.json
+          echo "📦 Affected apps (saved to artifact):"
+          cat affected-apps.json
           
       - name: Upload affected apps as artifact
         uses: actions/upload-artifact@v4
