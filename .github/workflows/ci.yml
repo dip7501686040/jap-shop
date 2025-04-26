@@ -69,7 +69,7 @@ jobs:
           
       - name: Create affected apps artifact file
         run: |
-          echo "${{ join(fromJSON(steps.set-affected-apps.outputs.affected_apps), ',') }}" > affected-apps.txt
+          echo "${{ join(fromJSON(steps.set-affected-apps.outputs.affected_apps), ',') }}" > affectedapps.txt
           if [ ! -s affected-apps.txt ]; then
             echo "Error: affected-apps.txt is empty or missing."
             exit 1
