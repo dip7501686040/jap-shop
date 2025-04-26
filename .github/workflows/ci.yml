@@ -16,17 +16,17 @@ jobs:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
     outputs:
-      affected_apps: ${{ steps.set-affectedapps.outputs.affected_apps }}
+      affected_apps: ${{ steps.set-affected-apps.outputs.affected_apps }}
     
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Ensures full git history is fetched
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v2
         with:
-          version: 8  # Ensure correct pnpm version
-          run_install: false  # Skip auto-install so you can manage it manually
+          version: 8
+          run_install: false  # optional, skips auto-install so you can do it manually if needed
 
       - uses: actions/setup-node@v4
         with:
@@ -34,7 +34,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install dependencies
-        run: pnpm install  # Ensure exact dependency versions are installed
+        run: pnpm install
 
       - name: Log in to Docker Hub
         run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
@@ -53,7 +53,7 @@ jobs:
           echo "BASE_SHA: $BASE_SHA"
       
       - name: Determine affected apps
-        id: set-affectedapps
+        id: set-affected-apps
         run: |
           AFFECTED=$(TURBO_SCM_BASE=$BASE_SHA npx turbo ls --affected --output=json | jq -c '[.packages.items[].name]')
           echo "Affected apps: $AFFECTED"
@@ -69,14 +69,11 @@ jobs:
           
       - name: Create affected apps artifact file
         run: |
-          echo "${{ join(fromJSON(steps.set-affectedapps.outputs.affected_apps), ',') }}" > affectedapps.txt
-          if [ ! -s affectedapps.txt ]; then
-            echo "Error: affectedapps.txt is empty or missing."
-            exit 1
-          fi
-
+          echo '${{ steps.set-affected-apps.outputs.affected_apps }}' > affected-apps.json
+          
       - name: Upload affected apps as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: affectedapps
-          path: affectedapps.txt
+          name: affected-apps
+          path: affected-apps.json
+          retention-days: 1

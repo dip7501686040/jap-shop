@@ -16,22 +16,14 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-      - name: Download affected apps artifact
+      - name: Download workflow artifact
+        if: ${{ github.event_name == 'workflow_run' }}
         uses: actions/download-artifact@v4
         with:
-          name: affectedapps
-          path: ./artifact
+          name: affected-apps
+          path: ./artifacts
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Read and process affected apps
-        run: |
-          AFFECTED=$(cat ./artifact/affectedapps.txt)
-          IFS=',' read -ra APPS <<< "$AFFECTED"
-          for app in "${APPS[@]}"; do
-            echo "Deploying $app"
-            # Add your deployment logic here
-          done
 
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -43,17 +35,15 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "workflow_run" ]; then
             echo "Reading affected apps from artifact..."
-            cat ./artifact/affectedapps.txt
-            AFFECTED=$(cat ./artifact/affectedapps.txt)
+            cat ./artifacts/affected-apps.json
+            AFFECTED=$(cat ./artifacts/affected-apps.json)
           else
             echo "Manual trigger: deploying all apps"
             AFFECTED=$(find k8s/* -type d -maxdepth 0 | xargs -n1 basename | jq -R -s -c 'split("\n") | map(select(length > 0))')
           fi
 
           echo "Deploying apps: $AFFECTED"
-          AFFECTED=$(cat ./artifact/affectedapps.txt)
-          IFS=',' read -ra APPS <<< "$AFFECTED"
-          for app in "${APPS[@]}"; do
-            echo "Deploying $app"
-            kubectl apply -f k8s/$app
+          for app_name in $(echo "$AFFECTED" | jq -r '.[]'); do
+            echo "Applying Kubernetes configuration for $app_name"
+            kubectl apply -f k8s/$app_name
           done
