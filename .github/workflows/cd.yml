@@ -21,7 +21,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: affected-apps
-          path: ./artifacts
+          path: ../../../../artifacts
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -35,8 +35,8 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "workflow_run" ]; then
             echo "Reading affected apps from artifact..."
-            cat ./artifacts/affected-apps.json
-            AFFECTED=$(cat ./artifacts/affected-apps.json)
+            cat ../../../../affected-apps.json
+            AFFECTED=$(cat ../../../../affected-apps.json)
           else
             echo "Manual trigger: deploying all apps"
             AFFECTED=$(find k8s/* -type d -maxdepth 0 | xargs -n1 basename | jq -R -s -c 'split("\n") | map(select(length > 0))')
