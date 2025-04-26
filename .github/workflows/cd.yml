@@ -23,6 +23,23 @@ jobs:
           name: affected-apps
           path: ./artifacts
 
+      - name: Verify artifact download
+        if: ${{ github.event_name == 'workflow_run' }}
+        run: |
+          echo "Artifact download completed. Checking contents:"
+          ls -la ./artifacts/
+          echo "Current working directory: $(pwd)"
+          
+          if [ -f "./artifacts/affected-apps.json" ]; then
+            echo "Content of affected-apps.json:"
+            cat ./artifacts/affected-apps.json
+          else
+            echo "affected-apps.json not found in artifacts directory"
+            find ./artifacts -type f | while read file; do
+              echo "Content of $file:"
+              cat "$file"
+            done
+          fi
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
