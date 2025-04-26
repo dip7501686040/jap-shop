@@ -25,6 +25,10 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Check downloaded file
+        run: |
+          cat ../../../../artifacts/affected-apps.json
+
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
@@ -35,8 +39,8 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "workflow_run" ]; then
             echo "Reading affected apps from artifact..."
-            cat ../../../../affected-apps.json
-            AFFECTED=$(cat ../../../../affected-apps.json)
+            cat ../../../../artifacts/affected-apps.json
+            AFFECTED=$(cat ../../../../artifacts/affected-apps.json)
           else
             echo "Manual trigger: deploying all apps"
             AFFECTED=$(find k8s/* -type d -maxdepth 0 | xargs -n1 basename | jq -R -s -c 'split("\n") | map(select(length > 0))')
