@@ -33,16 +33,8 @@ jobs:
           node-version: '18'
           cache: 'pnpm'
 
-      - name: Restore pnpm store cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.pnpm-store  # Cache pnpm store
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}  # Cache key based on the lockfile
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-  # Fallback if exact match isn't found
-
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile  # Ensure exact dependency versions are installed
+        run: pnpm install  # Ensure exact dependency versions are installed
 
       - name: Log in to Docker Hub
         run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
@@ -63,17 +55,17 @@ jobs:
       - name: Determine affected apps
         id: set-affected-apps
         run: |
-          AFFECTED=$(TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo ls --affected --output=json | jq -c '[.packages.items[].name]')
+          AFFECTED=$(TURBO_SCM_BASE=$BASE_SHA npx turbo ls --affected --output=json | jq -c '[.packages.items[].name]')
           echo "Affected apps: $AFFECTED"
           echo "affected_apps=$AFFECTED" >> $GITHUB_OUTPUT
       
       - name: Build Docker Images for Affected Apps
         run: |
-          TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo run docker:build:dev --affected
+          TURBO_SCM_BASE=$BASE_SHA npx turbo run docker:build:dev --affected
       
       - name: Push Docker Images for Affected Apps
         run: |
-          TURBO_SCM_BASE=$(git rev-parse HEAD^) npx turbo run docker:push:dev --affected
+          TURBO_SCM_BASE=$BASE_SHA npx turbo run docker:push:dev --affected
           
       - name: Create affected apps artifact file
         run: |
