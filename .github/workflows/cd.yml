@@ -16,12 +16,20 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-      - name: Download workflow artifact with run ID
-        if: ${{ github.event_name == 'workflow_run' }}
+      - name: Download affected apps artifact
         uses: actions/download-artifact@v4
         with:
-          name: affected-apps
+          name: affectedapps
           path: ./artifact
+
+      - name: Read and process affected apps
+        run: |
+          AFFECTED=$(cat ./artifact/affectedapps.txt)
+          IFS=',' read -ra APPS <<< "$AFFECTED"
+          for app in "${APPS[@]}"; do
+            echo "Deploying $app"
+            # Add your deployment logic here
+          done
 
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -41,7 +49,9 @@ jobs:
           fi
 
           echo "Deploying apps: $AFFECTED"
-          for app_name in $(echo "$AFFECTED" | jq -r '.[]'); do
-            echo "Applying Kubernetes configuration for $app_name"
-            kubectl apply -f k8s/$app_name
+          AFFECTED=$(cat ./artifact/affectedapps.txt)
+          IFS=',' read -ra APPS <<< "$AFFECTED"
+          for app in "${APPS[@]}"; do
+            echo "Deploying $app"
+            kubectl apply -f k8s/$app
           done
