@@ -16,7 +16,7 @@ jobs:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
     outputs:
-      affected_apps: ${{ steps.set-affected-apps.outputs.affected_apps }}
+      affected_apps: ${{ steps.set-affectedapps.outputs.affected_apps }}
     
     steps:
       - uses: actions/checkout@v3
@@ -53,7 +53,7 @@ jobs:
           echo "BASE_SHA: $BASE_SHA"
       
       - name: Determine affected apps
-        id: set-affected-apps
+        id: set-affectedapps
         run: |
           AFFECTED=$(TURBO_SCM_BASE=$BASE_SHA npx turbo ls --affected --output=json | jq -c '[.packages.items[].name]')
           echo "Affected apps: $AFFECTED"
@@ -69,9 +69,9 @@ jobs:
           
       - name: Create affected apps artifact file
         run: |
-          echo "${{ join(fromJSON(steps.set-affected-apps.outputs.affected_apps), ',') }}" > affectedapps.txt
-          if [ ! -s affected-apps.txt ]; then
-            echo "Error: affected-apps.txt is empty or missing."
+          echo "${{ join(fromJSON(steps.set-affectedapps.outputs.affected_apps), ',') }}" > affectedapps.txt
+          if [ ! -s affectedapps.txt ]; then
+            echo "Error: affectedapps.txt is empty or missing."
             exit 1
           fi
 
