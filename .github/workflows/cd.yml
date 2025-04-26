@@ -16,29 +16,31 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-      - name: Download workflow artifact
+      - name: Download workflow artifact with run ID
         if: ${{ github.event_name == 'workflow_run' }}
         uses: actions/download-artifact@v4
         with:
           name: affected-apps
           path: ./artifacts
+          run-id: ${{ github.event.workflow_run.id }}
+          repository: ${{ github.repository }}
 
       - name: Verify artifact download
         if: ${{ github.event_name == 'workflow_run' }}
         run: |
-          echo "Artifact download completed. Checking contents:"
-          ls -la ./artifacts/
-          echo "Current working directory: $(pwd)"
+          echo "Workflow run ID: ${{ github.event.workflow_run.id }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Checking artifact directory:"
+          ls -la ./artifacts/ || echo "Artifacts directory not found or empty"
           
-          if [ -f "./artifacts/affected-apps.json" ]; then
-            echo "Content of affected-apps.json:"
-            cat ./artifacts/affected-apps.json
-          else
-            echo "affected-apps.json not found in artifacts directory"
+          if [ -d "./artifacts" ] && [ "$(ls -A ./artifacts 2>/dev/null)" ]; then
+            echo "Artifact directory contents:"
             find ./artifacts -type f | while read file; do
               echo "Content of $file:"
               cat "$file"
             done
+          else
+            echo "No artifacts were found"
           fi
       - name: Checkout repository
         uses: actions/checkout@v3
