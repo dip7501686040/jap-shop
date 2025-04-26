@@ -18,30 +18,11 @@ jobs:
     steps:
       - name: Download workflow artifact with run ID
         if: ${{ github.event_name == 'workflow_run' }}
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v3
         with:
           name: affected-apps
-          path: ./artifacts
-          run-id: ${{ github.event.workflow_run.id }}
-          repository: ${{ github.repository }}
+          path: ./artifact  # <<< IMPORTANT
 
-      - name: Verify artifact download
-        if: ${{ github.event_name == 'workflow_run' }}
-        run: |
-          echo "Workflow run ID: ${{ github.event.workflow_run.id }}"
-          echo "Repository: ${{ github.repository }}"
-          echo "Checking artifact directory:"
-          ls -la ./artifacts/ || echo "Artifacts directory not found or empty"
-          
-          if [ -d "./artifacts" ] && [ "$(ls -A ./artifacts 2>/dev/null)" ]; then
-            echo "Artifact directory contents:"
-            find ./artifacts -type f | while read file; do
-              echo "Content of $file:"
-              cat "$file"
-            done
-          else
-            echo "No artifacts were found"
-          fi
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
@@ -52,7 +33,8 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "workflow_run" ]; then
             echo "Reading affected apps from artifact..."
-            AFFECTED=$(cat ./artifacts/affected-apps.json)
+            cat ./artifact/affected-apps.json
+            AFFECTED=$(cat ./artifact/affected-apps.json)
           else
             echo "Manual trigger: deploying all apps"
             AFFECTED=$(find k8s/* -type d -maxdepth 0 | xargs -n1 basename | jq -R -s -c 'split("\n") | map(select(length > 0))')
