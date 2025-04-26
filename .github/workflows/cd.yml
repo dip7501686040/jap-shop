@@ -18,10 +18,10 @@ jobs:
     steps:
       - name: Download workflow artifact with run ID
         if: ${{ github.event_name == 'workflow_run' }}
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: affected-apps
-          path: ./artifact  # <<< IMPORTANT
+          path: ./artifact
 
       - name: Checkout repository
         uses: actions/checkout@v3
