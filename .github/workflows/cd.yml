@@ -50,11 +50,7 @@ jobs:
           for app_name in $(echo "$AFFECTED" | jq -r '.[]'); do
             echo "Applying Kubernetes configuration for $app_name"
             kubectl apply -f k8s/$app_name
+            echo "Restarting deployment jap-shop-$app_name"
+            kubectl rollout restart deployment jap-shop-$app_name -n dev
           done
-      - name: Restart matching deployments
-        run: |
-          echo "Restarting deployments matching pattern 'jap-shop-${app_name}'"
-          for deployment in $(kubectl get deployments -o jsonpath="{.items[*].metadata.name}" | tr ' ' '\n' | grep "^jap-shop-${app_name}"); do
-            echo "Restarting deployment: $deployment"
-            kubectl rollout restart deployment "$deployment"
-          done
+          
