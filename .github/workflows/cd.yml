@@ -49,8 +49,8 @@ jobs:
           echo "Deploying apps: $AFFECTED"
           for app_name in $(echo "$AFFECTED" | jq -r '.[]'); do
             # Delete Deployment, Service
-            kubectl delete deployment jap-shop-$app_name -n $namespace
-            kubectl delete service jap-shop-$app_name -n $namespace
+            kubectl delete deployment jap-shop-$app_name -n dev
+            kubectl delete service jap-shop-$app_name -n dev
             echo "Applying Kubernetes configuration for $app_name"
             kubectl apply -f k8s/$app_name
           done
