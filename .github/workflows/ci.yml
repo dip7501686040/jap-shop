@@ -23,18 +23,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-          run_install: false  # optional, skips auto-install so you can do it manually if needed
-
       - uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install
 
       - name: Install Turborepo CLI globally
         run: npm install -g turbo
