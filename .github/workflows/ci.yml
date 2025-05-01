@@ -62,22 +62,22 @@ jobs:
       - name: Determine affected apps
         id: set-affected-apps
         run: |
-          AFFECTED=$(TURBO_SCM_BASE=$BASE_SHA turbo ls --affected --output=json | jq -r '.packages.items[].name')
+          AFFECTED=$(TURBO_SCM_BASE=$BASE_SHA turbo ls --affected --output=json | jq -c '[.packages.items[].name]')
           echo "Affected apps: $AFFECTED"
           echo "affected_apps=$AFFECTED" >> $GITHUB_OUTPUT
 
       - name: Build Docker Images for Affected Apps
         run: |
-          for app in ${{ steps.set-affected-apps.outputs.affected_apps }}; do
-            echo "Building Docker image for $app"
-            docker build -t $DOCKER_USERNAME/jap-shop-${app}:${COMMIT_ID} ./apps/$app
+          for app_name in $(echo "$AFFECTED" | jq -r '.[]'); do
+            echo "Building Docker image for $app_name"
+            docker build -t $DOCKER_USERNAME/jap-shop-${app_name}:${COMMIT_ID} ./apps/$app_name
           done
 
       - name: Push Docker Images for Affected Apps
         run: |
-          for app in ${{ steps.set-affected-apps.outputs.affected_apps }}; do
-            echo "Pushing Docker image for $app"
-            docker push $DOCKER_USERNAME/jap-shop-${app}:${COMMIT_ID}
+          for app_name in $(echo "$AFFECTED" | jq -r '.[]'); do
+            echo "Pushing Docker image for $app_name"
+            docker push $DOCKER_USERNAME/jap-shop-${app_name}:${COMMIT_ID}
           done
 
       - name: Create affected apps artifact file
