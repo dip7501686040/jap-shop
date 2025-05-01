@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
         - name: jap-shop-admin-frontend
-          image: docker.io/dip75016860/jap-shop-admin-frontend:dev
+          image: docker.io/dip75016860/jap-shop-admin-frontend:${COMMIT_ID}
           ports:
             - containerPort: 3000

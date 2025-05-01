@@ -37,6 +37,10 @@ jobs:
 
       - name: Deploy affected apps to Kubernetes
         run: |
+          # Get the short commit ID
+          COMMIT_ID=$(git rev-parse --short ${{ github.sha }})
+          echo "Using commit ID: $COMMIT_ID"
+
           if [ "${{ github.event_name }}" == "workflow_run" ]; then
             echo "Reading affected apps from artifact..."
             cat ../../../../artifacts/affected-apps.json
@@ -48,10 +52,12 @@ jobs:
 
           echo "Deploying apps: $AFFECTED"
           for app_name in $(echo "$AFFECTED" | jq -r '.[]'); do
-            # Delete Deployment, Service
-            kubectl delete deployment jap-shop-$app_name -n dev --ignore-not-found
-            kubectl delete service jap-shop-$app_name -n dev --ignore-not-found
-            echo "Applying Kubernetes configuration for $app_name"
-            kubectl apply -f k8s/$app_name
+            echo "Deploying $app_name with image tag $COMMIT_ID"
+            
+            # Export COMMIT_ID for envsubst to use
+            export COMMIT_ID
+            
+            # Substitute image tag into template and apply
+            envsubst < k8s/$app_name/deployment.yml | kubectl apply -f -
           done
           

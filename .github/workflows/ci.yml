@@ -26,7 +26,7 @@ jobs:
       - uses: pnpm/action-setup@v2
         with:
           version: 8
-          run_install: false  # optional, skips auto-install so you can do it manually if needed
+          run_install: false
 
       - uses: actions/setup-node@v4
         with:
@@ -38,7 +38,14 @@ jobs:
 
       - name: Log in to Docker Hub
         run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-      
+
+      - name: Set commit ID as tag
+        id: set-tag
+        run: |
+          COMMIT_ID=$(git rev-parse --short HEAD)
+          echo "COMMIT_ID=$COMMIT_ID" >> $GITHUB_ENV
+          echo "Using commit ID as tag: $COMMIT_ID"
+
       - name: Determine base commit
         id: base
         run: |
@@ -47,47 +54,36 @@ jobs:
             echo "git merge-base origin/dev HEAD: $BASE_SHA"
           else
             BASE_SHA=$(git rev-parse HEAD^)
-          echo "git rev-parse HEAD^: $BASE_SHA"
+            echo "git rev-parse HEAD^: $BASE_SHA"
           fi
           echo "BASE_SHA=$BASE_SHA" >> $GITHUB_ENV
-          echo "BASE_SHA: $BASE_SHA"
+          echo "Base commit: $BASE_SHA"
 
-      - name: Debug Turborepo affected detection
-        run: |
-          echo "BASE_SHA: $BASE_SHA"
-          echo "Current HEAD: $(git rev-parse HEAD)"
-          echo "Direct turbo affected output:"
-          TURBO_SCM_BASE=$BASE_SHA turbo ls --affected --output=json
-          
-          # Try with explicit file changes to confirm Turborepo is working correctly
-          echo "Checking if Turborepo can detect any changes at all:"
-          CHANGED_FILES=$(git diff --name-only $BASE_SHA HEAD)
-          echo "Changed files between $BASE_SHA and HEAD:"
-          echo "$CHANGED_FILES"
-          
-          # Check turbo.json configuration
-          echo "Current turbo.json configuration:"
-          cat turbo.json
-      
       - name: Determine affected apps
         id: set-affected-apps
         run: |
-          AFFECTED=$(TURBO_SCM_BASE=$BASE_SHA turbo ls --affected --output=json | jq -c '[.packages.items[].name]')
+          AFFECTED=$(TURBO_SCM_BASE=$BASE_SHA turbo ls --affected --output=json | jq -r '.packages.items[].name')
           echo "Affected apps: $AFFECTED"
           echo "affected_apps=$AFFECTED" >> $GITHUB_OUTPUT
-      
+
       - name: Build Docker Images for Affected Apps
         run: |
-          TURBO_SCM_BASE=$BASE_SHA turbo run docker:build:dev --affected
-      
+          for app in ${{ steps.set-affected-apps.outputs.affected_apps }}; do
+            echo "Building Docker image for $app"
+            docker build -t $DOCKER_USERNAME/jap-shop-${app}:${COMMIT_ID} ./apps/$app
+          done
+
       - name: Push Docker Images for Affected Apps
         run: |
-          TURBO_SCM_BASE=$BASE_SHA turbo run docker:push:dev --affected
-          
+          for app in ${{ steps.set-affected-apps.outputs.affected_apps }}; do
+            echo "Pushing Docker image for $app"
+            docker push $DOCKER_USERNAME/jap-shop-${app}:${COMMIT_ID}
+          done
+
       - name: Create affected apps artifact file
         run: |
           echo '${{ steps.set-affected-apps.outputs.affected_apps }}' > affected-apps.json
-          
+
       - name: Upload affected apps as artifact
         uses: actions/upload-artifact@v4
         with:
