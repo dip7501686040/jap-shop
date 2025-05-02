@@ -66,7 +66,7 @@ jobs:
           AFFECTED=$(TURBO_SCM_BASE=$BASE_SHA turbo ls --affected --output=json | jq -c '[.packages.items[].name]')
           echo "Affected apps: $AFFECTED"
           echo "affected_apps=$AFFECTED" >> $GITHUB_OUTPUT
-          echo "affected_apps_string=$(echo "$AFFECTED" | jq -r '.[]')" >> $GITHUB_OUTPUT
+          echo "affected_apps_string=$(echo "$AFFECTED" | jq -r '. | join(" ")')" >> $GITHUB_OUTPUT
 
       - name: Build Docker Images for Affected Apps
         run: |
