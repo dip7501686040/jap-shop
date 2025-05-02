@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/app/context/auth-context"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+  const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -22,6 +24,7 @@ export default function LoginPage() {
       if (email === "admin@example.com" && password === "password") {
         // Simulate API call delay
         await new Promise((resolve) => setTimeout(resolve, 800))
+        login(email, password)
         router.push("/dashboard")
       } else {
         setError("Invalid email or password")
@@ -43,7 +46,7 @@ export default function LoginPage() {
             <p className="mt-2 text-center text-sm text-gray-600">
               Or{" "}
               <Link href="/auth/signup" className="font-medium text-blue-600 hover:text-blue-500">
-                create a new account rollout update 222
+                create a new account
               </Link>
             </p>
           </div>

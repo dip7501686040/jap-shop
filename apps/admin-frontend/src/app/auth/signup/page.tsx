@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/app/context/auth-context"
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -15,6 +16,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+  const { signup } = useAuth()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -46,6 +48,7 @@ export default function SignupPage() {
       // Mock signup process - Replace with actual registration later
       // Simulate API call delay
       await new Promise((resolve) => setTimeout(resolve, 800))
+      signup(formData.fullName, formData.email, formData.password)
       router.push("/auth/login?registered=true")
     } catch {
       setError("An error occurred. Please try again.")
