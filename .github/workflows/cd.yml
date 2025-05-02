@@ -60,5 +60,6 @@ jobs:
             # Substitute image tag into template and apply
             envsubst < k8s/$app_name/deployment.yml | kubectl apply -f -
             kubectl apply -f k8s/$app_name/service.yml
+            kubectl apply -f k8s/$app_name/ingress.yml
           done
           
