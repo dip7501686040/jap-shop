@@ -63,5 +63,8 @@ jobs:
 
             # Load port config
             source k8s/$app_name/port-forward.txt
+            echo "EXTERNAL_PORT: $EXTERNAL_PORT"
+            echo "INTERNAL_PORT: $INTERNAL_PORT"
+            nohup kubectl port-forward svc/jap-shop-$app_name $EXTERNAL_PORT:$INTERNAL_PORT -n dev --address 0.0.0.0 &
           done
           
