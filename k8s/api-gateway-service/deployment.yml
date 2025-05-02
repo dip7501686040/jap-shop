@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
         - name: jap-shop-api-gateway-service
-          image: docker.io/dip75016860/jap-shop-api-gateway-service:dev
+          image: docker.io/dip75016860/jap-shop-api-gateway-service:${COMMIT_ID}
           ports:
             - containerPort: 4001
