@@ -1,7 +1,5 @@
 "use client"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { ReactNode } from "react"
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard" },
@@ -16,7 +14,6 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ setSidebarOpen }: SidebarProps) {
-  const router = useRouter()
   return (
     <div className="flex h-screen">
       <aside className="w-64 bg-gray-900 text-white flex flex-col py-8 px-4 shadow-lg overflow-hidden">
