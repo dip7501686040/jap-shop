@@ -1,5 +1,7 @@
 "use client"
 import Link from "next/link"
+import { useAuth } from "../context/auth-context"
+import { Power } from "lucide-react"
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard" },
@@ -14,10 +16,17 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ setSidebarOpen }: SidebarProps) {
+  const { logout } = useAuth()
+
   return (
     <div className="flex h-screen">
       <aside className="w-64 bg-gray-900 text-white flex flex-col py-8 px-4 shadow-lg overflow-hidden">
-        <div className="mb-10 text-2xl font-bold tracking-wide text-center">Admin Panel</div>
+        <div className="flex justify-between mb-10 text-xl font-bold tracking-wide">
+          <Link href="/dashboard" className="flex items-center justify-center space-x-2 text-white hover:text-gray-300 transition-colors" onClick={() => setSidebarOpen(false)}>
+            <span>Admin Panel</span>
+          </Link>
+          <Power onClick={logout} className="inline-block text-red-500 cursor-pointer" />
+        </div>
         <nav className="flex-1">
           <ul className="space-y-2">
             {navItems.map((item) => (
