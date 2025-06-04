@@ -1,9 +1,10 @@
 import React from "react"
+import { Customer } from "./CustomerListSection"
 
 interface CustomerListHeaderProps {
   debits: number
   credits: number
-  selectedCustomer: any
+  selectedCustomer: Customer | null
 }
 
 const CustomerListHeader: React.FC<CustomerListHeaderProps> = ({ debits, credits, selectedCustomer }) => (

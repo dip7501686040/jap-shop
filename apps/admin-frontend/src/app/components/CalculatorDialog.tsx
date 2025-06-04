@@ -17,10 +17,8 @@ export default function CalculatorDialog({
   containerMode?: boolean
 }) {
   const [amount, setAmount] = useState(initialAmount)
-  const color = type === "gave" ? "red" : "green"
   const headerText = type === "gave" ? `You Gave ${customerName} \u20B9 ${amount || 0}` : `${customerName} Gave You \u20B9 ${amount || 0}`
   const borderColor = type === "gave" ? "border-red-500" : "border-green-500"
-  const inputFocus = type === "gave" ? "focus:ring-red-500" : "focus:ring-green-500"
   const saveBgBtn = type === "gave" ? "bg-red-700" : "bg-green-700"
   const saveBgBtnHover = type === "gave" ? "hover:bg-red-800" : "hover:bg-green-800"
   const headerTextColor = type === "gave" ? "text-red-500" : "text-green-500"

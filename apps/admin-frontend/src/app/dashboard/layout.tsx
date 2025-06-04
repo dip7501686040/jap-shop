@@ -1,7 +1,6 @@
 "use client"
 import React, { useState } from "react"
 import Sidebar from "../components/Sidebar"
-import Header from "../components/Header"
 
 function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)

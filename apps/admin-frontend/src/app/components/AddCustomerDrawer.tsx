@@ -40,8 +40,15 @@ const AddCustomerDrawer: React.FC<AddCustomerDrawerProps> = ({ show, onClose }) 
                   onClick={async () => {
                     if ("contacts" in navigator && "ContactsManager" in window) {
                       try {
-                        // @ts-ignore
-                        const contacts = await (navigator as any).contacts.select(["name", "tel"], { multiple: false })
+                        interface Contact {
+                          name?: string[]
+                          tel?: string[]
+                        }
+                        interface ContactsManager {
+                          select(properties: ("name" | "tel")[], options: { multiple: boolean }): Promise<Contact[]>
+                        }
+                        const contactsManager = navigator.contacts as unknown as ContactsManager
+                        const contacts = await contactsManager.select(["name", "tel"], { multiple: false })
                         if (contacts && contacts.length > 0) {
                           const name = contacts[0].name && contacts[0].name.length > 0 ? contacts[0].name[0] : ""
                           let tel = contacts[0].tel && contacts[0].tel.length > 0 ? contacts[0].tel[0] : ""
@@ -52,7 +59,7 @@ const AddCustomerDrawer: React.FC<AddCustomerDrawerProps> = ({ show, onClose }) 
                           if (partyNameInput && name) partyNameInput.value = name
                           if (phoneInput && tel) phoneInput.value = tel
                         }
-                      } catch (e) {
+                      } catch {
                         alert("Could not access contacts.")
                       }
                     } else {

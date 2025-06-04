@@ -1,6 +1,7 @@
 import React from "react"
+import { Customer } from "./CustomerListSection"
 
-export default function CustomerList({ customers, onSelect }: { customers: { id: number; name: string; status: string; amount: number }[]; onSelect: (customer: any) => void }) {
+export default function CustomerList({ customers, onSelect }: { customers: Customer[]; onSelect: (customer: Customer) => void }) {
   return (
     <ul className="divide-y divide-gray-200">
       {customers.map((customer) => (

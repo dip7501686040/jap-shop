@@ -5,12 +5,21 @@ import AddCustomerButton from "./AddCustomerButton"
 import CustomerListHeader from "./CustomerListHeader"
 import CustomerListFilterBar from "./CustomerListFilterBar"
 
+export interface Customer {
+  id: number
+  name: string
+  status: string
+  debits: number
+  credits: number
+  amount: number
+}
+
 interface CustomerListSectionProps {
   debits: number
   credits: number
-  customers: Array<{ id: number; name: string; status: string; debits: number; credits: number; amount: number }>
-  selectedCustomer: any
-  onSelectCustomer: (customer: any) => void
+  customers: Customer[]
+  selectedCustomer: Customer | null
+  onSelectCustomer: (customer: Customer) => void
 }
 
 const CustomerListSection: React.FC<CustomerListSectionProps> = ({ debits, credits, customers, selectedCustomer, onSelectCustomer }) => {

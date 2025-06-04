@@ -1,7 +1,8 @@
 import React from "react"
+import { Customer } from "./CustomerListSection"
 
 interface CustomerListFilterBarProps {
-  selectedCustomer: any
+  selectedCustomer: Customer | null
 }
 
 const CustomerListFilterBar: React.FC<CustomerListFilterBarProps> = ({ selectedCustomer }) => (

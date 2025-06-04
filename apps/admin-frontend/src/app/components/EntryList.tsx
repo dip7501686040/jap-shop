@@ -1,6 +1,14 @@
 import React from "react"
 
-export default function EntryList({ entries, onSelect }: { entries: { id: number; type: "gave" | "got"; amount: number; date: string; time: string }[]; onSelect: (entry: any) => void }) {
+interface Entry {
+  id: number
+  type: "gave" | "got"
+  amount: number
+  date: string
+  time: string
+}
+
+export default function EntryList({ entries, onSelect }: { entries: Entry[]; onSelect: (entry: Entry) => void }) {
   return (
     <div className="space-y-3">
       {entries.map((entry) => (
