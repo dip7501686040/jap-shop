@@ -133,11 +133,11 @@ const AddCustomerDrawer: React.FC<AddCustomerDrawerProps> = ({ show, onClose }) 
             </div>
           </form>
           {/* Add Customer Button - sticky at bottom */}
-          <div className="fixed bottom-0 left-0 w-full max-w-md bg-white pt-4 pb-2 flex justify-end z-50 border-t border-gray-200">
+          <div className="absolute bottom-0 left-0 w-full max-w-md bg-white pb-2 px-4 flex justify-end z-50">
             <button
               type="submit"
               form="add-customer-form"
-              className="w-full md:w-auto px-8 py-3 rounded-full bg-[#b01257] text-white text-lg font-semibold shadow-xl hover:bg-[#a0004a] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full px-8 py-2 rounded-full bg-[#b01257] text-white text-lg font-semibold shadow-xl hover:bg-[#a0004a] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Add Customer
             </button>
