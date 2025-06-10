@@ -19,7 +19,7 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   console.log(
-    `API Gateway Service is running on port ${port} with env new update 101 ${configService.get<string>('ENV')} test change`,
+    `API Gateway Service is running on port ${port} with env new update 102 ${configService.get<string>('ENV')} test change`,
   );
   await app.listen(port);
 }
