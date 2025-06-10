@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: admin.janakalyanayurved.shop
+  - host: localhost
     http:
       paths:
       - path: /
