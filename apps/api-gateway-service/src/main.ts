@@ -9,6 +9,9 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') || 4000;
 
+  // Set global prefix for all routes
+  app.setGlobalPrefix('api');
+
   // Enable CORS
   app.enableCors();
 
@@ -28,7 +31,7 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup('api/docs', app, document);
 
   console.log(
     `API Gateway Service is running on port ${port} with env new update 114 ${configService.get<string>(
