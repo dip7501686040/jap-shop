@@ -17,6 +17,16 @@ export class AuthGuard extends NestAuthGuard('jwt') {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
+    const request = context.switchToHttp().getRequest();
+
+    // Allow access to Swagger documentation
+    if (
+      request.url.startsWith('/docs') ||
+      request.url.startsWith('/api/docs')
+    ) {
+      return true;
+    }
+
     // Check if the endpoint is public - check both handler and class
     const isPublicHandler = this.reflector.get<boolean>(
       IS_PUBLIC_KEY,

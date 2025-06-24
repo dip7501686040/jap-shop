@@ -2,11 +2,23 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') || 4000;
+
+  // Enable CORS
+  app.enableCors();
+
+  // Global validation pipe
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  );
 
   // Setup Swagger
   const config = new DocumentBuilder()
@@ -16,10 +28,12 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('docs', app, document);
 
   console.log(
-    `API Gateway Service is running on port ${port} with env new update 114 ${configService.get<string>('ENV')} test change`,
+    `API Gateway Service is running on port ${port} with env new update 114 ${configService.get<string>(
+      'ENV',
+    )} test change`,
   );
   await app.listen(port);
 }
