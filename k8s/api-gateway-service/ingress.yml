@@ -3,8 +3,6 @@ kind: Ingress
 metadata:
   name: jap-shop-api-gateway-service
   namespace: dev
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
   rules:
