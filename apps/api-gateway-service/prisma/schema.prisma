@@ -13,13 +13,54 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Role {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+  users       User[]
+
+  @@map("roles")
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String
   name      String
+  roleId    String?
+  role      Role?    @relation(fields: [roleId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("users")
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  entries   Entry[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("customers")
+}
+
+model Entry {
+  id         String    @id @default(cuid())
+  type       EntryType
+  amount     Float
+  customerId String
+  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@map("entries")
+}
+
+enum EntryType {
+  GAVE
+  GOT
 }

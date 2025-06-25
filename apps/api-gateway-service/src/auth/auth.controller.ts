@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Post, Request } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Request,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
@@ -9,6 +16,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -27,7 +35,34 @@ export class AuthController {
     return this.authService.register(createUserDto);
   }
 
-  @ApiOperation({ summary: 'Login to get access token' })
+  @ApiOperation({
+    summary:
+      'Login to initiate OTP process for superAdmin or direct login for others',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Login successful or OTP sent to user email',
+  })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @Public()
+  @Post('/login')
+  async login(@Body() loginDto: LoginDto) {
+    const user = await this.authService.validateUser(loginDto);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (user.role?.name === 'superAdmin') {
+      // Generate and send OTP for superAdmin
+      await this.authService.sendOtp(user.email);
+      return { message: 'OTP sent to your email' };
+    }
+
+    // Direct login for other roles
+    return this.authService.login(user);
+  }
+
+  @ApiOperation({ summary: 'Verify OTP and complete login for superAdmin' })
   @ApiResponse({
     status: 200,
     description: 'Login successful',
@@ -48,11 +83,19 @@ export class AuthController {
       },
     },
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 401, description: 'Invalid OTP or unauthorized role' })
   @Public()
-  @Post('/login')
-  login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  @Post('/verify-otp')
+  async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto) {
+    const user = await this.authService.verifyOtpAndLogin(
+      verifyOtpDto.email,
+      verifyOtpDto.otp,
+    );
+    if (!user || user.role?.name !== 'superAdmin') {
+      throw new UnauthorizedException('Invalid OTP or unauthorized role');
+    }
+
+    return this.authService.login(user);
   }
 
   @ApiOperation({ summary: 'Get user profile' })

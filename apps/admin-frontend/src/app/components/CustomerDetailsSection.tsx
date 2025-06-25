@@ -6,7 +6,7 @@ import { ArrowLeft, File, IndianRupee, MessageCircle, MoreVertical, PhoneCall } 
 
 interface Entry {
   id: number
-  type: "gave" | "got"
+  type: "GAVE" | "GOT"
   amount: number
   date: string
   time: string
@@ -25,8 +25,8 @@ interface CustomerDetailsSectionProps {
   entries: Entry[]
   selectedEntry: Entry | null
   setSelectedEntry: (entry: Entry | null) => void
-  showCalculator: "gave" | "got" | null
-  setShowCalculator: (type: "gave" | "got" | null) => void
+  showCalculator: "GAVE" | "GOT" | null
+  setShowCalculator: (type: "GAVE" | "GOT" | null) => void
   calcValue: string
   setCalcValue: (val: string) => void
   onBack: () => void
@@ -130,7 +130,7 @@ const CustomerDetailsSection: React.FC<CustomerDetailsSectionProps> = ({ selecte
         <button
           className="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold text-md"
           onClick={() => {
-            setShowCalculator("gave")
+            setShowCalculator("GAVE")
             setCalcValue("")
           }}
         >
@@ -139,7 +139,7 @@ const CustomerDetailsSection: React.FC<CustomerDetailsSectionProps> = ({ selecte
         <button
           className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold text-md"
           onClick={() => {
-            setShowCalculator("got")
+            setShowCalculator("GOT")
             setCalcValue("")
           }}
         >
@@ -189,7 +189,7 @@ const CustomerDetailsSection: React.FC<CustomerDetailsSectionProps> = ({ selecte
           <CalculatorDialog
             open={!!showCalculator}
             onClose={() => setShowCalculator(null)}
-            type={showCalculator as "gave" | "got"}
+            type={showCalculator as "GAVE" | "GOT"}
             customerName={selectedCustomer.name}
             initialAmount={calcValue}
             // mobile: full screen, so containerMode not set
@@ -201,7 +201,7 @@ const CustomerDetailsSection: React.FC<CustomerDetailsSectionProps> = ({ selecte
                 <CalculatorDialog
                   open={!!showCalculator}
                   onClose={() => setShowCalculator(null)}
-                  type={showCalculator as "gave" | "got"}
+                  type={showCalculator as "GAVE" | "GOT"}
                   customerName={selectedCustomer.name}
                   initialAmount={calcValue}
                   containerMode={true}

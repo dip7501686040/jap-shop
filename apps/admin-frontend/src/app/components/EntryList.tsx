@@ -2,7 +2,7 @@ import React from "react"
 
 interface Entry {
   id: number
-  type: "gave" | "got"
+  type: "GAVE" | "GOT"
   amount: number
   date: string
   time: string
@@ -17,7 +17,7 @@ export default function EntryList({ entries, onSelect }: { entries: Entry[]; onS
             <span className="text-white text-sm">
               {entry.date} • {entry.time}
             </span>
-            <span className={entry.type === "got" ? "text-green-400 text-base font-semibold" : "text-red-500 text-base font-semibold"}>₹ {entry.amount}</span>
+            <span className={entry.type === "GOT" ? "text-green-400 text-base font-semibold" : "text-red-500 text-base font-semibold"}>₹ {entry.amount}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-xs bg-[#2c2b2e] text-gray-300 rounded px-2 py-0.5">Bal. ₹ 0</span>

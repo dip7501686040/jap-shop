@@ -4,25 +4,25 @@ import React, { useState } from "react"
 export default function CalculatorDialog({
   open,
   onClose,
-  type, // 'gave' | 'got'
+  type, // "GAVE" | "GOT"
   customerName,
   initialAmount = "",
   containerMode = false // if true, use absolute (desktop right section), else fixed (mobile)
 }: {
   open: boolean
   onClose: () => void
-  type: "gave" | "got"
+  type: "GAVE" | "GOT"
   customerName: string
   initialAmount?: string
   containerMode?: boolean
 }) {
   const [amount, setAmount] = useState(initialAmount)
-  const headerText = type === "gave" ? `You Gave ${customerName} \u20B9 ${amount || 0}` : `${customerName} Gave You \u20B9 ${amount || 0}`
-  const borderColor = type === "gave" ? "border-red-500" : "border-green-500"
-  const saveBgBtn = type === "gave" ? "bg-red-700" : "bg-green-700"
-  const saveBgBtnHover = type === "gave" ? "hover:bg-red-800" : "hover:bg-green-800"
-  const headerTextColor = type === "gave" ? "text-red-500" : "text-green-500"
-  const iconColor = type === "gave" ? "text-red-500" : "text-green-500"
+  const headerText = type === "GAVE" ? `You Gave ${customerName} \u20B9 ${amount || 0}` : `${customerName} Gave You \u20B9 ${amount || 0}`
+  const borderColor = type === "GAVE" ? "border-red-500" : "border-green-500"
+  const saveBgBtn = type === "GAVE" ? "bg-red-700" : "bg-green-700"
+  const saveBgBtnHover = type === "GAVE" ? "hover:bg-red-800" : "hover:bg-green-800"
+  const headerTextColor = type === "GAVE" ? "text-red-500" : "text-green-500"
+  const iconColor = type === "GAVE" ? "text-red-500" : "text-green-500"
 
   function handleKey(key: string) {
     if (key === "C") setAmount("")

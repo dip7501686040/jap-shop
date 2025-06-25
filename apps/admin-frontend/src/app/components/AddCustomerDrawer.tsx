@@ -91,8 +91,8 @@ const AddCustomerDrawer: React.FC<AddCustomerDrawerProps> = ({ show, onClose }) 
               <div className="flex gap-2">
                 <input type="number" placeholder="Enter amount" className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#b01257]" />
                 <select className="border border-gray-300 rounded px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b01257]">
-                  <option value="gave">You Gave</option>
-                  <option value="got">You Got</option>
+                  <option value="GAVE">You Gave</option>
+                  <option value="GOT">You Got</option>
                 </select>
               </div>
             </div>

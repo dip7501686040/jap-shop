@@ -12,6 +12,9 @@ export class UserService extends BasePrismaService<User> {
   async findOneByEmail(email: string): Promise<User | null> {
     return this.prismaService.user.findUnique({
       where: { email },
+      include: {
+        role: true, // Include role information if needed
+      },
     });
   }
 }

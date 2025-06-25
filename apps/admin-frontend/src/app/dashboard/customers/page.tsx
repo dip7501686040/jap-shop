@@ -32,14 +32,14 @@ function Customers() {
     { id: 20, name: "Rachel Green", status: "VIP", debits: 8000, credits: 6000, amount: 2000 }
   ]
   const [selectedCustomer, setSelectedCustomer] = useState<null | (typeof customers)[0]>(null)
-  const [showCalculator, setShowCalculator] = useState<null | "gave" | "got">(null)
+  const [showCalculator, setShowCalculator] = useState<null | "GAVE" | "GOT">(null)
   const [calcValue, setCalcValue] = useState("")
-  const [selectedEntry, setSelectedEntry] = useState<null | { id: number; type: "gave" | "got"; amount: number; date: string; time: string }>(null)
+  const [selectedEntry, setSelectedEntry] = useState<null | { id: number; type: "GAVE" | "GOT"; amount: number; date: string; time: string }>(null)
 
   // Example entries for demo (replace with real data)
-  const entries: { id: number; type: "gave" | "got"; amount: number; date: string; time: string }[] = [
-    { id: 1, type: "got", amount: 100, date: "28 May", time: "11:02 PM" },
-    { id: 2, type: "gave", amount: 100, date: "28 May", time: "11:02 PM" }
+  const entries: { id: number; type: "GAVE" | "GOT"; amount: number; date: string; time: string }[] = [
+    { id: 1, type: "GOT", amount: 100, date: "28 May", time: "11:02 PM" },
+    { id: 2, type: "GAVE", amount: 100, date: "28 May", time: "11:02 PM" }
   ]
 
   // Responsive check

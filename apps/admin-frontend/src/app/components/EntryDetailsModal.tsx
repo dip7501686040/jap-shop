@@ -11,7 +11,7 @@ export default function EntryDetailsModal({
 }: {
   open: boolean
   onClose: () => void
-  entry: { id: number; type: "gave" | "got"; amount: number; date: string; time: string }
+  entry: { id: number; type: "GAVE" | "GOT"; amount: number; date: string; time: string }
   customerName: string
   onEdit: () => void
   containerMode?: boolean
@@ -40,8 +40,8 @@ export default function EntryDetailsModal({
               </div>
             </div>
             <div className="flex flex-col items-end">
-              <span className={entry.type === "got" ? "text-green-400 text-lg font-bold" : "text-red-500 text-lg font-bold"}>₹ {entry.amount}</span>
-              <span className="text-gray-300 text-xs">{entry.type === "got" ? "You got" : "You gave"}</span>
+              <span className={entry.type === "GOT" ? "text-green-400 text-lg font-bold" : "text-red-500 text-lg font-bold"}>₹ {entry.amount}</span>
+              <span className="text-gray-300 text-xs">{entry.type === "GOT" ? "You got" : "You gave"}</span>
             </div>
           </div>
           <div className="flex items-center justify-between mt-2">
@@ -68,7 +68,7 @@ export default function EntryDetailsModal({
             <span className="text-gray-300 font-semibold">Sms Disabled</span>
           </div>
           <div className="text-gray-300 text-sm mt-2">
-            You {entry.type === "gave" ? "gave" : "got"} ₹ {entry.amount} to My Business(700173750). You will receive ₹ 0 in total
+            You {entry.type === "GAVE" ? "GAVE" : "GOT"} ₹ {entry.amount} to My Business(700173750). You will receive ₹ 0 in total
             <br />
             <span className="block mt-2">
               See txn history: <span className="underline">https://khata.pe/t/RIF5k2CWE</span>
