@@ -13,7 +13,7 @@
 
 # Login an existing user
 # curl -X 'POST' \
-#   'http://localhost:4001/api/auth/login' \
+#   'https://janakalyanayurved.shop/api/auth/login' \
 #   -H 'accept: application/json' \
 #   -H 'Content-Type: application/json' \
 #   -d '{
@@ -23,7 +23,7 @@
 
 # verify OTP
 # curl -X 'POST' \
-#   'http://localhost:4001/api/auth/verify-otp' \
+#   'https://janakalyanayurved.shop/api/auth/verify-otp' \
 #   -H 'accept: application/json' \
 #   -H 'Content-Type: application/json' \
 #   -d '{
@@ -44,7 +44,7 @@
 #   -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbWNiZXRoaWkwMDAxazcwdmd3dGdmY3huIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwODIzMDE2LCJleHAiOjE3NTA5MDk0MTZ9.QSFxD0PnumV5F-5ijd8fRXdMg48NpFG0a2eVbET6rd4'
 
 # Get entries by customerId
-# curl -X 'GET' \
-#   'http://localhost:4001/api/entries?customerId=cmcc93za80009ik0u9hngthww' \
-#   -H 'accept: */*' \
-#   -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbWNiZXRoaWkwMDAxazcwdmd3dGdmY3huIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwODIzMDE2LCJleHAiOjE3NTA5MDk0MTZ9.QSFxD0PnumV5F-5ijd8fRXdMg48NpFG0a2eVbET6rd4'
+curl -X 'GET' \
+  'https://janakalyanayurved.shop/api/entries?customerId=cmcc93za80009ik0u9hngthww' \
+  -H 'accept: */*' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbWNiZXRoaWkwMDAxazcwdmd3dGdmY3huIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiaWF0IjoxNzUwODIzMDE2LCJleHAiOjE3NTA5MDk0MTZ9.QSFxD0PnumV5F-5ijd8fRXdMg48NpFG0a2eVbET6rd4'
