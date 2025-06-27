@@ -15,7 +15,7 @@ RUN pnpm install
 # Copy the app's source code
 COPY . .
 
-RUN npx prisma generate
+RUN pnpm dlx prisma generate
 
 # Build the app for development
 RUN pnpm run build:dev
