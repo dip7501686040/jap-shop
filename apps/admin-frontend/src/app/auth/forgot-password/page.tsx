@@ -20,8 +20,9 @@ export default function ForgotPasswordPage() {
     try {
       await forgotPassword(email)
       setSuccess(true)
-    } catch (err: any) {
-      setError(err.response?.data?.message || "An error occurred. Please try again.")
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error && "response" in err ? (err as { response?: { data?: { message?: string } } }).response?.data?.message : "An error occurred. Please try again."
+      setError(errorMessage || "An error occurred. Please try again.")
     } finally {
       setLoading(false)
     }

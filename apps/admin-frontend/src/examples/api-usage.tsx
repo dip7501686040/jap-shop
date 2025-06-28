@@ -51,7 +51,7 @@ export function CreateUserForm() {
     }
   })
 
-  const handleSubmit = (formData: any) => {
+  const handleSubmit = (formData: { name: string; email: string; password: string }) => {
     createUser(formData)
   }
 
@@ -129,7 +129,7 @@ export function FileUpload() {
     mutate: uploadFile,
     loading,
     error
-  } = useMutation(({ file, onProgress }: { file: File; onProgress?: (progress: number) => void }) => {
+  } = useMutation(({ file }: { file: File; onProgress?: (progress: number) => void }) => {
     const formData = new FormData()
     formData.append("file", file)
 
@@ -142,10 +142,7 @@ export function FileUpload() {
 
   const handleFileUpload = (file: File) => {
     uploadFile({
-      file,
-      onProgress: (progress) => {
-        console.log("Upload progress:", progress)
-      }
+      file
     })
   }
 
@@ -168,8 +165,8 @@ export function FileUpload() {
 // Example 6: Error handling patterns
 export function ErrorHandlingExample() {
   const { execute, loading, error } = useApi(
-    async (userId: string) => {
-      const response = await UserService.getUserById(userId)
+    async (userId: unknown) => {
+      const response = await UserService.getUserById(userId as string)
       return response.data
     },
     {
@@ -201,7 +198,7 @@ export function ErrorHandlingExample() {
           <h4>Error occurred:</h4>
           <p>Status: {error.status}</p>
           <p>Message: {error.message}</p>
-          {error.details && <pre>{JSON.stringify(error.details, null, 2)}</pre>}
+          {error.details ? <pre>{typeof error.details === "object" ? JSON.stringify(error.details, null, 2) : String(error.details)}</pre> : null}
         </div>
       )}
     </div>

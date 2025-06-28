@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { useRouter } from "next/navigation"
 import { tokenStorage } from "@/lib/cookies"
 import { AuthService, type User, type LoginRequest, type SignupRequest, type VerifyOtpRequest } from "@/lib/api-services"
-import { handleApiError, type ApiError } from "@/hooks/useApi"
+import { handleApiError } from "@/hooks/useApi"
 
 // Auth context interface
 interface AuthContextType {

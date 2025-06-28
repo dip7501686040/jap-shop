@@ -13,19 +13,19 @@ export interface ApiError {
   message: string
   status?: number
   code?: string
-  details?: any
+  details?: unknown
 }
 
 export interface UseApiResult<T> {
   data: T | null
   loading: boolean
   error: ApiError | null
-  execute: (...args: any[]) => Promise<T | null>
+  execute: (...args: unknown[]) => Promise<T | null>
   reset: () => void
 }
 
 // Custom hook for API calls
-export function useApi<T = any>(apiFunction: (...args: any[]) => Promise<T>, options: UseApiOptions<T> = {}): UseApiResult<T> {
+export function useApi<T = unknown>(apiFunction: (...args: unknown[]) => Promise<T>, options: UseApiOptions<T> = {}): UseApiResult<T> {
   const { initialData = null, executeOnMount = false, onSuccess, onError } = options
 
   const [data, setData] = useState<T | null>(initialData)
@@ -33,7 +33,7 @@ export function useApi<T = any>(apiFunction: (...args: any[]) => Promise<T>, opt
   const [error, setError] = useState<ApiError | null>(null)
 
   const execute = useCallback(
-    async (...args: any[]): Promise<T | null> => {
+    async (...args: unknown[]): Promise<T | null> => {
       try {
         setLoading(true)
         setError(null)
@@ -120,7 +120,7 @@ export function handleApiError(error: unknown): ApiError {
 }
 
 // Hook for mutations (POST, PUT, DELETE operations)
-export function useMutation<TData = any, TVariables = any>(mutationFn: (variables: TVariables) => Promise<TData>, options: UseApiOptions<TData> = {}) {
+export function useMutation<TData = unknown, TVariables = unknown>(mutationFn: (variables: TVariables) => Promise<TData>, options: UseApiOptions<TData> = {}) {
   const [data, setData] = useState<TData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<ApiError | null>(null)
@@ -171,7 +171,7 @@ export function useMutation<TData = any, TVariables = any>(mutationFn: (variable
 }
 
 // Hook for queries (GET operations)
-export function useQuery<T = any>(
+export function useQuery<T = unknown>(
   queryKey: string,
   queryFn: () => Promise<T>,
   options: UseApiOptions<T> & {
@@ -195,7 +195,7 @@ export function useQuery<T = any>(
 
       return () => clearInterval(interval)
     }
-  }, [refetchInterval, enabled, result.loading, result.execute])
+  }, [refetchInterval, enabled, result.loading, result.execute, result])
 
   return {
     ...result,

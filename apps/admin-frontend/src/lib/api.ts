@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosResponse, AxiosError, InternalAxiosRequestConfig } from "axios"
+import axios, { AxiosInstance, AxiosResponse, AxiosError, InternalAxiosRequestConfig, AxiosRequestConfig } from "axios"
 import { tokenStorage } from "./cookies"
 
 // Create axios instance with base configuration
@@ -96,7 +96,7 @@ api.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${accessToken}`
           return api(originalRequest)
         }
-      } catch (refreshError) {
+      } catch {
         // Refresh failed, redirect to login
         if (typeof window !== "undefined") {
           tokenStorage.clearTokens()
@@ -134,32 +134,32 @@ declare module "axios" {
 // API helper functions
 export const apiClient = {
   // GET request
-  get: <T = any>(url: string, config?: any): Promise<AxiosResponse<T>> => {
+  get: <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
     return api.get(url, config)
   },
 
   // POST request
-  post: <T = any>(url: string, data?: any, config?: any): Promise<AxiosResponse<T>> => {
+  post: <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
     return api.post(url, data, config)
   },
 
   // PUT request
-  put: <T = any>(url: string, data?: any, config?: any): Promise<AxiosResponse<T>> => {
+  put: <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
     return api.put(url, data, config)
   },
 
   // PATCH request
-  patch: <T = any>(url: string, data?: any, config?: any): Promise<AxiosResponse<T>> => {
+  patch: <T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
     return api.patch(url, data, config)
   },
 
   // DELETE request
-  delete: <T = any>(url: string, config?: any): Promise<AxiosResponse<T>> => {
+  delete: <T = unknown>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
     return api.delete(url, config)
   },
 
   // Upload file
-  upload: <T = any>(url: string, formData: FormData, onUploadProgress?: (progressEvent: any) => void): Promise<AxiosResponse<T>> => {
+  upload: <T = unknown>(url: string, formData: FormData, onUploadProgress?: (progressEvent: unknown) => void): Promise<AxiosResponse<T>> => {
     return api.post(url, formData, {
       headers: {
         "Content-Type": "multipart/form-data"

@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
+import { useState, useEffect, Suspense } from "react"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/app/context/auth-context"
 
-export default function VerifyOtpPage() {
+function VerifyOtpContent() {
   const [otp, setOtp] = useState("")
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
@@ -83,7 +82,7 @@ export default function VerifyOtpPage() {
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold">Verify OTP</h2>
             <p className="mt-2 text-center text-sm text-gray-600">
-              We've sent a 6-digit verification code to <span className="font-medium text-blue-600">{email}</span>
+              We&apos;ve sent a 6-digit verification code to <span className="font-medium text-blue-600">{email}</span>
             </p>
           </div>
 
@@ -159,7 +158,7 @@ export default function VerifyOtpPage() {
           </form>
 
           <div className="text-center text-sm text-gray-600">
-            <p>Didn't receive the code? Check your spam folder or try resending.</p>
+            <p>Didn&apos;t receive the code? Check your spam folder or try resending.</p>
           </div>
         </div>
       </div>
@@ -179,5 +178,13 @@ export default function VerifyOtpPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function VerifyOtpPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VerifyOtpContent />
+    </Suspense>
   )
 }

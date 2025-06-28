@@ -134,13 +134,13 @@ export class UserService {
 export class DashboardService {
   private static readonly BASE_PATH = "/dashboard"
 
-  static async getStats(): Promise<ApiResponse<any>> {
-    const response = await apiClient.get<ApiResponse<any>>(`${this.BASE_PATH}/stats`)
+  static async getStats(): Promise<ApiResponse<Record<string, unknown>>> {
+    const response = await apiClient.get<ApiResponse<Record<string, unknown>>>(`${this.BASE_PATH}/stats`)
     return response.data
   }
 
-  static async getRecentActivity(): Promise<ApiResponse<any[]>> {
-    const response = await apiClient.get<ApiResponse<any[]>>(`${this.BASE_PATH}/recent-activity`)
+  static async getRecentActivity(): Promise<ApiResponse<Record<string, unknown>[]>> {
+    const response = await apiClient.get<ApiResponse<Record<string, unknown>[]>>(`${this.BASE_PATH}/recent-activity`)
     return response.data
   }
 }
@@ -152,17 +152,17 @@ export class ApiService {
     return response.data
   }
 
-  static async post<T>(endpoint: string, data: any): Promise<ApiResponse<T>> {
+  static async post<T>(endpoint: string, data: unknown): Promise<ApiResponse<T>> {
     const response = await apiClient.post<ApiResponse<T>>(endpoint, data)
     return response.data
   }
 
-  static async put<T>(endpoint: string, data: any): Promise<ApiResponse<T>> {
+  static async put<T>(endpoint: string, data: unknown): Promise<ApiResponse<T>> {
     const response = await apiClient.put<ApiResponse<T>>(endpoint, data)
     return response.data
   }
 
-  static async patch<T>(endpoint: string, data: any): Promise<ApiResponse<T>> {
+  static async patch<T>(endpoint: string, data: unknown): Promise<ApiResponse<T>> {
     const response = await apiClient.patch<ApiResponse<T>>(endpoint, data)
     return response.data
   }
