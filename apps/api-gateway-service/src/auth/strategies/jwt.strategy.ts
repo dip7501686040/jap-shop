@@ -16,7 +16,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: any) {
     // You can add additional validation logic here
     // For example, check if the user still exists in the database
-    const user = await this.userService.findOne(payload.sub);
+    const userId = payload.user_id || payload.sub;
+    const user = await this.userService.findOne(userId);
     if (!user) {
       return null;
     }
@@ -27,6 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       id: user.id,
       email: user.email,
       name: user.name,
+      role: user.role?.name || null,
     };
   }
 }

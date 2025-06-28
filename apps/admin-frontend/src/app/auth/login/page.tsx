@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
-  const { login } = useAuth()
+  const { login, error: authError, isLoading } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -20,14 +20,14 @@ export default function LoginPage() {
     setError("")
 
     try {
-      // Mock authentication - Replace with actual auth later
-      if (email === "admin@example.com" && password === "password") {
-        // Simulate API call delay
-        await new Promise((resolve) => setTimeout(resolve, 800))
-        login(email, password)
+      const result = await login(email, password)
+      if (result === true) {
         router.push("/dashboard")
+      } else if (result === "otp_required") {
+        // Redirect to OTP verification page with email parameter
+        router.push(`/auth/verify-otp?email=${encodeURIComponent(email)}`)
       } else {
-        setError("Invalid email or password")
+        setError(authError || "Login failed. Please try again.")
       }
     } catch {
       setError("An error occurred. Please try again.")
@@ -115,11 +115,19 @@ export default function LoginPage() {
             <div>
               <button
                 type="submit"
-                disabled={loading}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed"
+                disabled={loading || isLoading}
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed cursor-pointer"
               >
-                {loading ? "Signing in..." : "Sign in"}
+                {loading || isLoading ? "Signing in..." : "Sign in"}
               </button>
+            </div>
+
+            <div className="flex items-center justify-between mt-6">
+              <div className="text-sm">
+                <Link href="/auth/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+                  Forgot your password?
+                </Link>
+              </div>
             </div>
 
             <div className="mt-6">

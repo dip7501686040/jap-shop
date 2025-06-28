@@ -16,7 +16,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
-  const { signup } = useAuth()
+  const { signup, error: authError, isLoading } = useAuth()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -45,11 +45,12 @@ export default function SignupPage() {
     }
 
     try {
-      // Mock signup process - Replace with actual registration later
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 800))
-      signup(formData.fullName, formData.email, formData.password)
-      router.push("/auth/login?registered=true")
+      const success = await signup(formData.fullName, formData.email, formData.password)
+      if (success) {
+        router.push("/auth/login?registered=true")
+      } else {
+        setError(authError || "Signup failed. Please try again.")
+      }
     } catch {
       setError("An error occurred. Please try again.")
     } finally {
@@ -181,10 +182,10 @@ export default function SignupPage() {
             <div>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || isLoading}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed"
               >
-                {loading ? "Creating account..." : "Create account"}
+                {loading || isLoading ? "Creating account..." : "Create account"}
               </button>
             </div>
 

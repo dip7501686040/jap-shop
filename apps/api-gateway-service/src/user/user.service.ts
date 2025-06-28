@@ -17,4 +17,13 @@ export class UserService extends BasePrismaService<User> {
       },
     });
   }
+
+  async findOne(id: string): Promise<any> {
+    return this.prismaService.user.findUnique({
+      where: { id },
+      include: {
+        role: true, // Include role information
+      },
+    });
+  }
 }

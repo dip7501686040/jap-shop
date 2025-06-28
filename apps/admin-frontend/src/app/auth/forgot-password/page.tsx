@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { forgotPassword } from "@/lib/api-services"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
@@ -17,16 +18,10 @@ export default function ForgotPasswordPage() {
     setSuccess(false)
 
     try {
-      // Mock password reset - Replace with actual reset functionality later
-      if (email) {
-        // Simulate API call delay
-        await new Promise((resolve) => setTimeout(resolve, 800))
-        setSuccess(true)
-      } else {
-        setError("Please enter a valid email address")
-      }
-    } catch {
-      setError("An error occurred. Please try again.")
+      await forgotPassword(email)
+      setSuccess(true)
+    } catch (err: any) {
+      setError(err.response?.data?.message || "An error occurred. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -56,48 +51,74 @@ export default function ForgotPasswordPage() {
             <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-4">
               <div className="flex">
                 <div className="text-green-700">
-                  <p>Password reset link has been sent to your email</p>
+                  <p className="font-medium">Email sent successfully!</p>
+                  <p className="text-sm mt-1">Check your email for password reset instructions. The link will expire in 10 minutes.</p>
                 </div>
               </div>
             </div>
           )}
 
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            <div className="rounded-md shadow-sm space-y-4">
+          {!success && (
+            <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+              <div className="rounded-md shadow-sm space-y-4">
+                <div>
+                  <label htmlFor="email-address" className="sr-only">
+                    Email address
+                  </label>
+                  <input
+                    id="email-address"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                    placeholder="Email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+
               <div>
-                <label htmlFor="email-address" className="sr-only">
-                  Email address
-                </label>
-                <input
-                  id="email-address"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed"
+                >
+                  {loading ? "Sending reset link..." : "Send reset link"}
+                </button>
+              </div>
+
+              <div className="text-center">
+                <Link href="/auth/login" className="font-medium text-blue-600 hover:text-blue-500">
+                  Back to sign in
+                </Link>
+              </div>
+            </form>
+          )}
+
+          {success && (
+            <div className="mt-8 text-center space-y-4">
+              <Link
+                href="/auth/login"
+                className="inline-flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-blue-600 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Back to Sign In
+              </Link>
+              <div className="text-sm text-gray-600">
+                Didn&apos;t receive the email? Check your spam folder or{" "}
+                <button
+                  onClick={() => {
+                    setSuccess(false)
+                    setEmail("")
+                  }}
+                  className="font-medium text-blue-600 hover:text-blue-500"
+                >
+                  try again
+                </button>
               </div>
             </div>
-
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-400 disabled:cursor-not-allowed"
-              >
-                {loading ? "Sending reset link..." : "Send reset link"}
-              </button>
-            </div>
-
-            <div className="text-center">
-              <Link href="/auth/login" className="font-medium text-blue-600 hover:text-blue-500">
-                Back to sign in
-              </Link>
-            </div>
-          </form>
+          )}
         </div>
       </div>
 
