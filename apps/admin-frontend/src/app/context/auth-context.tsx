@@ -17,6 +17,10 @@ interface AuthContextType {
   logout: () => void
   forgotPassword: (email: string) => Promise<boolean>
   error: string | null
+  // Password visibility state
+  passwordVisibility: Record<string, boolean>
+  togglePasswordVisibility: (fieldId: string) => void
+  setPasswordVisibility: (fieldId: string, visible: boolean) => void
 }
 
 // Create the auth context
@@ -32,6 +36,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [passwordVisibility, setPasswordVisibilityState] = useState<Record<string, boolean>>({})
   const router = useRouter()
 
   // Check if user is logged in on component mount
@@ -210,6 +215,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
+  // Password visibility functions
+  const togglePasswordVisibility = (fieldId: string) => {
+    setPasswordVisibilityState((prev) => ({
+      ...prev,
+      [fieldId]: !prev[fieldId]
+    }))
+  }
+
+  const setPasswordVisibility = (fieldId: string, visible: boolean) => {
+    setPasswordVisibilityState((prev) => ({
+      ...prev,
+      [fieldId]: visible
+    }))
+  }
+
   // Context value
   const value = {
     user,
@@ -220,7 +240,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signup,
     logout,
     forgotPassword,
-    error
+    error,
+    passwordVisibility,
+    togglePasswordVisibility,
+    setPasswordVisibility
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

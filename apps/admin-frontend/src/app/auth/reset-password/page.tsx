@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { resetPassword } from "@/lib/api-services"
+import PasswordInput from "@/app/components/PasswordInput"
 
 function ResetPasswordContent() {
   const [newPassword, setNewPassword] = useState("")
@@ -109,35 +110,33 @@ function ResetPasswordContent() {
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
-                <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1">
-                  New Password
-                </label>
-                <input
+                <PasswordInput
                   id="new-password"
                   name="new-password"
-                  type="password"
-                  required
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                   placeholder="Enter your new password"
+                  autoComplete="new-password"
+                  required
                   minLength={6}
+                  label="New Password"
+                  showLabel={true}
+                  className="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-white-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 />
               </div>
               <div>
-                <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Confirm Password
-                </label>
-                <input
+                <PasswordInput
                   id="confirm-password"
                   name="confirm-password"
-                  type="password"
-                  required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                   placeholder="Confirm your new password"
+                  autoComplete="new-password"
+                  required
                   minLength={6}
+                  label="Confirm Password"
+                  showLabel={true}
+                  className="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-white-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 />
               </div>
             </div>

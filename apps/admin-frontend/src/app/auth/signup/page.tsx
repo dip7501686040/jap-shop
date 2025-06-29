@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/app/context/auth-context"
+import PasswordInput from "@/app/components/PasswordInput"
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -133,35 +134,29 @@ export default function SignupPage() {
                 />
               </div>
               <div>
-                <label htmlFor="password" className="sr-only">
-                  Password
-                </label>
-                <input
+                <PasswordInput
                   id="password"
                   name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-white-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Password"
                   value={formData.password}
                   onChange={handleInputChange}
+                  placeholder="Password"
+                  autoComplete="new-password"
+                  required
+                  label="Password"
+                  className="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-white-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 />
               </div>
               <div>
-                <label htmlFor="confirm-password" className="sr-only">
-                  Confirm Password
-                </label>
-                <input
+                <PasswordInput
                   id="confirm-password"
                   name="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-white-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Confirm Password"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
+                  placeholder="Confirm Password"
+                  autoComplete="new-password"
+                  required
+                  label="Confirm Password"
+                  className="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-white-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 />
               </div>
             </div>
