@@ -8,12 +8,16 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT') || 4000;
+  const frontendUrl = configService.get<string>('FRONTEND_URL');
 
   // Set global prefix for all routes
   app.setGlobalPrefix('api');
 
-  // Enable CORS
-  app.enableCors();
+  // Enable CORS with frontend URL
+  app.enableCors({
+    origin: frontendUrl || 'http://localhost:3000',
+    credentials: true,
+  });
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -34,9 +38,13 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   console.log(
-    `API Gateway Service is running on port ${port} with env new update 114 ${configService.get<string>(
+    `API Gateway Service is running on port ${port} with env ${configService.get<string>(
       'ENV',
-    )} test change`,
+    )}`,
+  );
+  console.log(`Frontend URL: ${frontendUrl || 'http://localhost:3000'}`);
+  console.log(
+    `Swagger documentation available at: http://localhost:${port}/api/docs`,
   );
   await app.listen(port);
 }
