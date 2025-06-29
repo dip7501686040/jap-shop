@@ -1,53 +1,285 @@
 "use client"
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import CustomerListSection from "../../components/CustomerListSection"
 import CustomerDetailsSection from "../../components/CustomerDetailsSection"
+import EditCustomerDrawer from "../../components/EditCustomerDrawer"
+import { CustomerService, Customer, CreateCustomerRequest, UpdateCustomerRequest, EntryService, CreateEntryRequest } from "../../../lib/api-services"
+import { Customer as ComponentCustomer } from "../../components/CustomerListSection"
+
+// Component Entry interface
+interface ComponentEntry {
+  id: string
+  type: "GAVE" | "GOT"
+  amount: number
+  date: string
+  time: string
+}
 
 // Customers
 function Customers() {
-  // Example values, replace with real data as needed
-  const debits = 12000
-  const credits = 8500
-  // Example customer list
-  const customers = [
-    { id: 1, name: "John Doe", status: "Active", debits: 5000, credits: 2000, amount: 3000 },
-    { id: 2, name: "Jane Smith", status: "VIP", debits: 7000, credits: 6500, amount: 500 },
-    { id: 3, name: "Alice Brown", status: "Inactive", debits: 0, credits: 0, amount: 0 },
-    { id: 4, name: "Bob Johnson", status: "Active", debits: 3000, credits: 1500, amount: 1500 },
-    { id: 5, name: "Charlie White", status: "VIP", debits: 6000, credits: 4000, amount: 2000 },
-    { id: 6, name: "Diana Prince", status: "Active", debits: 8000, credits: 5000, amount: 3000 },
-    { id: 7, name: "Ethan Hunt", status: "Inactive", debits: 0, credits: 0, amount: 0 },
-    { id: 8, name: "Fiona Gallagher", status: "VIP", debits: 9000, credits: 7000, amount: 2000 },
-    { id: 9, name: "George Costanza", status: "Active", debits: 4000, credits: 3000, amount: 1000 },
-    { id: 10, name: "Hannah Montana", status: "Inactive", debits: 0, credits: 0, amount: 0 },
-    { id: 11, name: "Ian Malcolm", status: "VIP", debits: 10000, credits: 8000, amount: 2000 },
-    { id: 12, name: "Jack Sparrow", status: "Active", debits: 2000, credits: 1000, amount: 1000 },
-    { id: 13, name: "Katherine Pierce", status: "Inactive", debits: 0, credits: 0, amount: 0 },
-    { id: 14, name: "Liam Neeson", status: "VIP", debits: 11000, credits: 9000, amount: 2000 },
-    { id: 15, name: "Mia Wallace", status: "Active", debits: 6000, credits: 4000, amount: 2000 },
-    { id: 16, name: "Nina Simone", status: "Inactive", debits: 0, credits: 0, amount: 0 },
-    { id: 17, name: "Oscar Isaac", status: "VIP", debits: 12000, credits: 10000, amount: 2000 },
-    { id: 18, name: "Paul Atreides", status: "Active", debits: 3000, credits: 2000, amount: 1000 },
-    { id: 19, name: "Quinn Fabray", status: "Inactive", debits: 0, credits: 0, amount: 0 },
-    { id: 20, name: "Rachel Green", status: "VIP", debits: 8000, credits: 6000, amount: 2000 }
-  ]
-  const [selectedCustomer, setSelectedCustomer] = useState<null | (typeof customers)[0]>(null)
+  // State management
+  const [customers, setCustomers] = useState<ComponentCustomer[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedCustomer, setSelectedCustomer] = useState<ComponentCustomer | null>(null)
   const [showCalculator, setShowCalculator] = useState<null | "GAVE" | "GOT">(null)
   const [calcValue, setCalcValue] = useState("")
-  const [selectedEntry, setSelectedEntry] = useState<null | { id: number; type: "GAVE" | "GOT"; amount: number; date: string; time: string }>(null)
+  const [selectedEntry, setSelectedEntry] = useState<ComponentEntry | null>(null)
+  const [showEditCustomer, setShowEditCustomer] = useState(false)
+  const [customerToEdit, setCustomerToEdit] = useState<ComponentCustomer | null>(null)
 
-  // Example entries for demo (replace with real data)
-  const entries: { id: number; type: "GAVE" | "GOT"; amount: number; date: string; time: string }[] = [
-    { id: 1, type: "GOT", amount: 100, date: "28 May", time: "11:02 PM" },
-    { id: 2, type: "GAVE", amount: 100, date: "28 May", time: "11:02 PM" }
-  ]
+  // State for total debits and credits (from API summary)
+  const [totalDebits, setTotalDebits] = useState(0)
+  const [totalCredits, setTotalCredits] = useState(0)
+
+  // Calculate totals from customer data
+  const debits = customers.reduce((total, customer) => total + customer.debits, 0)
+  const credits = customers.reduce((total, customer) => total + customer.credits, 0)
+
+  // Convert entries for selected customer to display format
+  const entries: ComponentEntry[] =
+    selectedCustomer?.entries
+      ?.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) // Sort by newest first
+      ?.map((entry) => ({
+        id: entry.id,
+        type: entry.type,
+        amount: entry.amount,
+        date: new Date(entry.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }),
+        time: new Date(entry.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true })
+      })) || []
+
+  // Convert Customer to component format for compatibility
+  const formatCustomersForComponent = (apiCustomers: Customer[]): ComponentCustomer[] => {
+    return apiCustomers.map((customer) => {
+      const gaveAmount = customer.entries?.reduce((sum, entry) => (entry.type === "GAVE" ? sum + entry.amount : sum), 0) || 0
+      const gotAmount = customer.entries?.reduce((sum, entry) => (entry.type === "GOT" ? sum + entry.amount : sum), 0) || 0
+      const netAmount = gaveAmount - gotAmount
+
+      return {
+        id: customer.id,
+        name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        address: customer.address,
+        status: netAmount > 0 ? "Active" : netAmount < 0 ? "VIP" : "Inactive",
+        debits: gaveAmount,
+        credits: gotAmount,
+        amount: Math.abs(netAmount),
+        entries: customer.entries,
+        createdAt: customer.createdAt,
+        updatedAt: customer.updatedAt
+      }
+    })
+  }
+
+  // API functions
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await CustomerService.getCustomers()
+      if (response.success) {
+        const formattedCustomers = formatCustomersForComponent(response.data)
+        setCustomers(formattedCustomers)
+        return formattedCustomers
+      } else {
+        setError(response.message || "Failed to fetch customers")
+        return []
+      }
+    } catch (err) {
+      setError("Error fetching customers")
+      console.error("Error fetching customers:", err)
+      return []
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const createCustomer = async (customerData: CreateCustomerRequest, openingBalance?: { amount: number; type: "GAVE" | "GOT" }) => {
+    try {
+      const response = await CustomerService.createCustomer(customerData)
+      if (response.success) {
+        // If there's an opening balance, create an entry for it
+        if (openingBalance && openingBalance.amount > 0) {
+          const entryData: CreateEntryRequest = {
+            type: openingBalance.type,
+            amount: openingBalance.amount,
+            customerId: response.data.id
+          }
+          await EntryService.createEntry(entryData)
+        }
+
+        await fetchCustomers() // Refresh the list
+        await fetchSummary() // Refresh summary after creating customer
+        return response.data
+      } else {
+        throw new Error(response.message || "Failed to create customer")
+      }
+    } catch (err) {
+      console.error("Error creating customer:", err)
+      throw err
+    }
+  }
+
+  const updateCustomer = async (id: string, customerData: UpdateCustomerRequest) => {
+    try {
+      const response = await CustomerService.updateCustomer(id, customerData)
+      if (response.success) {
+        await fetchCustomers() // Refresh the list
+        return response.data
+      } else {
+        throw new Error(response.message || "Failed to update customer")
+      }
+    } catch (err) {
+      console.error("Error updating customer:", err)
+      throw err
+    }
+  }
+
+  const deleteCustomer = async (id: string) => {
+    try {
+      const response = await CustomerService.deleteCustomer(id)
+      if (response.success) {
+        await fetchCustomers() // Refresh the list
+        await fetchSummary() // Refresh summary after deleting customer
+        if (selectedCustomer?.id === id) {
+          setSelectedCustomer(null) // Clear selection if deleted customer was selected
+        }
+      } else {
+        throw new Error(response.message || "Failed to delete customer")
+      }
+    } catch (err) {
+      console.error("Error deleting customer:", err)
+      throw err
+    }
+  }
+
+  // Helper function to refresh data and update selected customer
+  const refreshDataAndSelectedCustomer = async () => {
+    const updatedCustomers = await fetchCustomers()
+    await fetchSummary() // Refresh summary data to update header
+    if (selectedCustomer && updatedCustomers.length > 0) {
+      const updatedCustomer = updatedCustomers.find((c) => c.id === selectedCustomer.id)
+      if (updatedCustomer) {
+        setSelectedCustomer(updatedCustomer)
+      }
+    }
+  }
+
+  // Entry management functions
+  const createEntry = async (amount: number, type: "GAVE" | "GOT", entryId?: string) => {
+    if (!selectedCustomer) return
+
+    try {
+      if (entryId) {
+        // Update existing entry
+        const response = await EntryService.updateEntry(entryId, { amount, type })
+        if (response.success) {
+          await refreshDataAndSelectedCustomer() // Refresh data and update selectedCustomer
+        } else {
+          throw new Error(response.message || "Failed to update entry")
+        }
+      } else {
+        // Create new entry
+        const entryData: CreateEntryRequest = {
+          type,
+          amount,
+          customerId: selectedCustomer.id
+        }
+        const response = await EntryService.createEntry(entryData)
+        if (response.success) {
+          await refreshDataAndSelectedCustomer() // Refresh data and update selectedCustomer
+        } else {
+          throw new Error(response.message || "Failed to create entry")
+        }
+      }
+    } catch (err) {
+      console.error("Error managing entry:", err)
+      throw err
+    }
+  }
+
+  const deleteEntry = async (entryId: string) => {
+    try {
+      const response = await EntryService.deleteEntry(entryId)
+      if (response.success) {
+        await refreshDataAndSelectedCustomer() // Refresh data and update selectedCustomer
+      } else {
+        throw new Error(response.message || "Failed to delete entry")
+      }
+    } catch (err) {
+      console.error("Error deleting entry:", err)
+      throw err
+    }
+  }
+
+  // Handle customer selection with proper type conversion
+  const handleSelectCustomer = (customer: ComponentCustomer) => {
+    setSelectedCustomer(customer)
+  }
+
+  // Handle edit customer
+  const handleEditCustomer = (customer: ComponentCustomer) => {
+    setCustomerToEdit(customer)
+    setShowEditCustomer(true)
+  }
+
+  // Load customers on component mount
+  useEffect(() => {
+    fetchCustomers()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch summary from API
+  const fetchSummary = async () => {
+    try {
+      const response = await CustomerService.getSummary()
+      if (response.success) {
+        setTotalDebits(response.data.totalDebits)
+        setTotalCredits(response.data.totalCredits)
+      }
+    } catch (err) {
+      // Optionally handle error
+    }
+  }
+
+  useEffect(() => {
+    fetchSummary()
+  }, [])
 
   // Responsive check
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Loading customers...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <div className="text-red-500 text-lg mb-4">Error: {error}</div>
+        <button onClick={fetchCustomers} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+          Retry
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen h-full overflow-hidden">
-      <CustomerListSection debits={debits} credits={credits} customers={customers} selectedCustomer={selectedCustomer} onSelectCustomer={setSelectedCustomer} />
+      <CustomerListSection
+        debits={totalDebits}
+        credits={totalCredits}
+        customers={customers}
+        selectedCustomer={selectedCustomer}
+        onSelectCustomer={handleSelectCustomer}
+        onCreateCustomer={createCustomer}
+        onUpdateCustomer={updateCustomer}
+        onDeleteCustomer={deleteCustomer}
+      />
       <CustomerDetailsSection
         selectedCustomer={selectedCustomer}
         entries={entries}
@@ -59,6 +291,20 @@ function Customers() {
         setCalcValue={setCalcValue}
         onBack={() => setSelectedCustomer(null)}
         isMobile={isMobile}
+        onEditCustomer={handleEditCustomer}
+        onDeleteCustomer={deleteCustomer}
+        onSaveEntry={createEntry}
+        onDeleteEntry={deleteEntry}
+      />
+      <EditCustomerDrawer
+        show={showEditCustomer}
+        onClose={() => {
+          setShowEditCustomer(false)
+          setCustomerToEdit(null)
+        }}
+        customer={customerToEdit}
+        onUpdateCustomer={updateCustomer}
+        onDeleteCustomer={deleteCustomer}
       />
     </div>
   )

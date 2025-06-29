@@ -18,6 +18,7 @@ import {
 import { EntryService } from './entry.service';
 import { CreateEntryDto } from './dto/create-entry.dto';
 import { UpdateEntryDto } from './dto/update-entry.dto';
+import { createSuccessResponse } from '../common/api-response.dto';
 
 @ApiTags('Entries')
 @Controller('entries')
@@ -31,8 +32,9 @@ export class EntryController {
     description: 'Entry successfully created',
   })
   @Post()
-  create(@Body() createEntryDto: CreateEntryDto) {
-    return this.entryService.create(createEntryDto);
+  async create(@Body() createEntryDto: CreateEntryDto) {
+    const entry = await this.entryService.create(createEntryDto);
+    return createSuccessResponse(entry, 'Entry successfully created');
   }
 
   @ApiOperation({ summary: 'Get all entries' })
@@ -46,11 +48,16 @@ export class EntryController {
     description: 'Filter by customer ID',
   })
   @Get()
-  findAll(@Query('customerId') customerId?: string) {
+  async findAll(@Query('customerId') customerId?: string) {
     if (customerId) {
-      return this.entryService.findByCustomer(customerId);
+      const entries = await this.entryService.findByCustomer(customerId);
+      return createSuccessResponse(
+        entries,
+        'Customer entries retrieved successfully',
+      );
     }
-    return this.entryService.findAll();
+    const entries = await this.entryService.findAll();
+    return createSuccessResponse(entries, 'All entries retrieved successfully');
   }
 
   @ApiOperation({ summary: 'Get an entry by ID' })
@@ -59,8 +66,9 @@ export class EntryController {
     description: 'Returns the entry with customer details',
   })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.entryService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    const entry = await this.entryService.findOne(id);
+    return createSuccessResponse(entry, 'Entry retrieved successfully');
   }
 
   @ApiOperation({ summary: 'Get entries by customer ID' })
@@ -69,8 +77,12 @@ export class EntryController {
     description: 'Returns all entries for a specific customer',
   })
   @Get('customer/:customerId')
-  findByCustomer(@Param('customerId') customerId: string) {
-    return this.entryService.findByCustomer(customerId);
+  async findByCustomer(@Param('customerId') customerId: string) {
+    const entries = await this.entryService.findByCustomer(customerId);
+    return createSuccessResponse(
+      entries,
+      'Customer entries retrieved successfully',
+    );
   }
 
   @ApiOperation({ summary: 'Get customer GOT balance' })
@@ -79,8 +91,12 @@ export class EntryController {
     description: 'Returns the customer GOT balance',
   })
   @Get('customer/:customerId/got-balance')
-  getGotBalance(@Param('customerId') customerId: string) {
-    return this.entryService.getCustomerGOTBalance(customerId);
+  async getGotBalance(@Param('customerId') customerId: string) {
+    const balance = await this.entryService.getCustomerGOTBalance(customerId);
+    return createSuccessResponse(
+      balance,
+      'Customer GOT balance retrieved successfully',
+    );
   }
 
   @ApiOperation({ summary: 'Get customer GAVE balance' })
@@ -89,8 +105,12 @@ export class EntryController {
     description: 'Returns the customer GAVE balance',
   })
   @Get('customer/:customerId/gave-balance')
-  getGaveBalance(@Param('customerId') customerId: string) {
-    return this.entryService.getCustomerGAVEBalance(customerId);
+  async getGaveBalance(@Param('customerId') customerId: string) {
+    const balance = await this.entryService.getCustomerGAVEBalance(customerId);
+    return createSuccessResponse(
+      balance,
+      'Customer GAVE balance retrieved successfully',
+    );
   }
 
   @ApiOperation({ summary: 'Update an entry' })
@@ -99,8 +119,12 @@ export class EntryController {
     description: 'Entry successfully updated',
   })
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateEntryDto: UpdateEntryDto) {
-    return this.entryService.update(id, updateEntryDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateEntryDto: UpdateEntryDto,
+  ) {
+    const entry = await this.entryService.update(id, updateEntryDto);
+    return createSuccessResponse(entry, 'Entry updated successfully');
   }
 
   @ApiOperation({ summary: 'Delete an entry' })
@@ -109,7 +133,8 @@ export class EntryController {
     description: 'Entry successfully deleted',
   })
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.entryService.remove(id);
+  async remove(@Param('id') id: string) {
+    await this.entryService.remove(id);
+    return createSuccessResponse(null, 'Entry deleted successfully');
   }
 }

@@ -7,7 +7,9 @@ export default function CalculatorDialog({
   type, // "GAVE" | "GOT"
   customerName,
   initialAmount = "",
-  containerMode = false // if true, use absolute (desktop right section), else fixed (mobile)
+  containerMode = false, // if true, use absolute (desktop right section), else fixed (mobile)
+  onSave,
+  entryId // for editing existing entries
 }: {
   open: boolean
   onClose: () => void
@@ -15,8 +17,11 @@ export default function CalculatorDialog({
   customerName: string
   initialAmount?: string
   containerMode?: boolean
+  onSave?: (amount: number, type: "GAVE" | "GOT", entryId?: string) => Promise<void>
+  entryId?: string
 }) {
   const [amount, setAmount] = useState(initialAmount)
+  const [loading, setLoading] = useState(false)
   const headerText = type === "GAVE" ? `You Gave ${customerName} \u20B9 ${amount || 0}` : `${customerName} Gave You \u20B9 ${amount || 0}`
   const borderColor = type === "GAVE" ? "border-red-500" : "border-green-500"
   const saveBgBtn = type === "GAVE" ? "bg-red-700" : "bg-green-700"
@@ -32,6 +37,27 @@ export default function CalculatorDialog({
     } else if (["M+", "M-", "%", "\u00F7", "\u00D7", "+", "-"].includes(key)) {
       /* Optionally handle */
     } else setAmount((a) => a + key)
+  }
+
+  const handleSave = async () => {
+    if (!amount || !onSave) return
+
+    try {
+      setLoading(true)
+      const numericAmount = parseFloat(amount)
+      if (isNaN(numericAmount) || numericAmount <= 0) {
+        alert("Please enter a valid amount")
+        return
+      }
+
+      await onSave(numericAmount, type, entryId)
+      onClose()
+    } catch (error) {
+      console.error("Error saving entry:", error)
+      alert("Failed to save entry. Please try again.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (!open) return null
@@ -63,16 +89,8 @@ export default function CalculatorDialog({
         {/* Save Button and Keypad at the bottom */}
         <div className="flex flex-col justify-end flex-1 w-full">
           <div className="w-full px-4 pb-4">
-            <button
-              className={`w-full py-3 rounded-xl font-bold text-lg ${saveBgBtn} ${saveBgBtnHover} transition`}
-              style={{ opacity: amount ? 1 : 0.5 }}
-              disabled={!amount}
-              onClick={() => {
-                /* Save logic */
-                onClose()
-              }}
-            >
-              Save
+            <button className={`w-full py-3 rounded-xl font-bold text-lg ${saveBgBtn} ${saveBgBtnHover} transition`} style={{ opacity: amount && !loading ? 1 : 0.5 }} disabled={!amount || loading} onClick={handleSave}>
+              {loading ? (entryId ? "Updating..." : "Saving...") : "Save"}
             </button>
           </div>
           {/* Calculator Keypad */}

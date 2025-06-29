@@ -1,5 +1,5 @@
 import { ArrowLeft } from "lucide-react"
-import React from "react"
+import React, { useState } from "react"
 
 export default function EntryDetailsModal({
   open,
@@ -7,15 +7,39 @@ export default function EntryDetailsModal({
   entry,
   customerName,
   onEdit,
-  containerMode = false // if true, use absolute (desktop right section), else fixed (mobile)
+  onDelete,
+  containerMode = false, // if true, use absolute (desktop right section), else fixed (mobile)
+  runningBalance = 0
 }: {
   open: boolean
   onClose: () => void
-  entry: { id: number; type: "GAVE" | "GOT"; amount: number; date: string; time: string }
+  entry: { id: string; type: "GAVE" | "GOT"; amount: number; date: string; time: string }
   customerName: string
   onEdit: () => void
+  onDelete?: (entryId: string) => Promise<void>
   containerMode?: boolean
+  runningBalance?: number
 }) {
+  const [loading, setLoading] = useState(false)
+
+  const handleDelete = async () => {
+    if (!onDelete) return
+
+    const confirmed = window.confirm("Are you sure you want to delete this entry?")
+    if (!confirmed) return
+
+    try {
+      setLoading(true)
+      await onDelete(entry.id)
+      onClose()
+    } catch (error) {
+      console.error("Error deleting entry:", error)
+      alert("Failed to delete entry. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (!open) return null
   return (
     <div className={`${containerMode ? "absolute" : "fixed"} inset-0 z-[110] flex flex-col bg-black bg-opacity-95`}>
@@ -46,7 +70,9 @@ export default function EntryDetailsModal({
           </div>
           <div className="flex items-center justify-between mt-2">
             <span className="text-gray-400 text-sm">Running Balance</span>
-            <span className="text-white text-sm font-semibold">₹ 0</span>
+            <span className={`text-sm font-semibold ${runningBalance > 0 ? "text-green-400" : runningBalance < 0 ? "text-red-400" : "text-white"}`}>
+              ₹ {Math.abs(runningBalance)} {runningBalance > 0 ? "(You will get)" : runningBalance < 0 ? "(You will give)" : ""}
+            </span>
           </div>
           <button className="mt-4 flex items-center gap-2 justify-center py-2 rounded-lg border border-gray-500 text-white text-base font-semibold hover:bg-[#18181a]" onClick={onEdit}>
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -98,12 +124,12 @@ export default function EntryDetailsModal({
       </div>
       {/* Bottom Buttons */}
       <div className={`${containerMode ? "absolute" : "fixed"} bottom-0 left-0 w-full flex gap-2 px-4 pb-4 pt-2 bg-black z-[120]`}>
-        <button className="flex-1 border border-white text-white py-3 rounded-xl font-bold text-lg bg-transparent" onClick={onClose}>
+        <button className="flex-1 border border-white text-white py-3 rounded-xl font-bold text-lg bg-transparent hover:bg-gray-800 disabled:opacity-50" onClick={handleDelete} disabled={loading || !onDelete}>
           <svg className="inline-block mr-2" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <rect x="3" y="3" width="18" height="18" rx="2" />
             <path d="M9 9l6 6M15 9l-6 6" />
           </svg>
-          Delete
+          {loading ? "Deleting..." : "Delete"}
         </button>
         <button className="flex-1 bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl font-bold text-lg" onClick={onClose}>
           <svg className="inline-block mr-2" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">

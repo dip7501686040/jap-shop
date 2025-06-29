@@ -1,12 +1,71 @@
 import { Contact } from "lucide-react"
-import React from "react"
+import React, { useState } from "react"
+import { CreateCustomerRequest, Customer } from "../../lib/api-services"
 
 interface AddCustomerDrawerProps {
   show: boolean
   onClose: () => void
+  onCreateCustomer?: (customerData: CreateCustomerRequest, openingBalance?: { amount: number; type: "GAVE" | "GOT" }) => Promise<Customer>
 }
 
-const AddCustomerDrawer: React.FC<AddCustomerDrawerProps> = ({ show, onClose }) => {
+const AddCustomerDrawer: React.FC<AddCustomerDrawerProps> = ({ show, onClose, onCreateCustomer }) => {
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    address: "",
+    openingBalance: "",
+    balanceType: "GAVE" as "GAVE" | "GOT"
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.name.trim()) {
+      setError("Party name is required")
+      return
+    }
+
+    setIsSubmitting(true)
+    setError(null)
+
+    try {
+      const customerData = {
+        name: formData.name.trim(),
+        phone: formData.phone.trim() || undefined,
+        address: formData.address.trim() || undefined
+      }
+
+      const openingBalance = formData.openingBalance.trim()
+        ? {
+            amount: parseFloat(formData.openingBalance),
+            type: formData.balanceType
+          }
+        : undefined
+
+      if (onCreateCustomer) {
+        await onCreateCustomer(customerData, openingBalance)
+      }
+
+      // Reset form and close drawer
+      setFormData({
+        name: "",
+        phone: "",
+        address: "",
+        openingBalance: "",
+        balanceType: "GAVE"
+      })
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create customer")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
   if (!show) return null
   return (
     <div className="block">
@@ -19,19 +78,23 @@ const AddCustomerDrawer: React.FC<AddCustomerDrawerProps> = ({ show, onClose }) 
           </button>
         </div>
         <div className="flex-1 overflow-y-auto p-6 pb-32">
-          <form
-            className="space-y-6"
-            onSubmit={(e) => {
-              e.preventDefault()
-            }}
-          >
+          {error && <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">{error}</div>}
+          <form id="add-customer-form" className="space-y-6" onSubmit={handleSubmit}>
             {/* Party Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Party Name <span className="text-red-500">*</span>
               </label>
               <div className="flex relative">
-                <input id="partyNameInput" required type="text" placeholder="Enter Party Name" className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#b01257]" />
+                <input
+                  id="partyNameInput"
+                  required
+                  type="text"
+                  placeholder="Enter Party Name"
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#b01257]"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                />
                 {/* Show contact picker button on mobile only */}
                 <button
                   type="button"
@@ -79,7 +142,14 @@ const AddCustomerDrawer: React.FC<AddCustomerDrawerProps> = ({ show, onClose }) 
               </label>
               <div className="flex relative">
                 <span className="inline-flex items-center px-3 rounded-l border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">+91</span>
-                <input id="phoneInput" required type="tel" placeholder="Enter Phone Number" className="w-full border border-gray-300 rounded-r px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#b01257]" />
+                <input
+                  id="phoneInput"
+                  type="tel"
+                  placeholder="Enter Phone Number"
+                  className="w-full border border-gray-300 rounded-r px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#b01257]"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange("phone", e.target.value)}
+                />
                 {/* Removed contact picker button from phone number field */}
               </div>
             </div>
@@ -89,8 +159,18 @@ const AddCustomerDrawer: React.FC<AddCustomerDrawerProps> = ({ show, onClose }) 
                 Opening Balance <span className="text-xs text-gray-400">(optional)</span>
               </label>
               <div className="flex gap-2">
-                <input type="number" placeholder="Enter amount" className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#b01257]" />
-                <select className="border border-gray-300 rounded px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b01257]">
+                <input
+                  type="number"
+                  placeholder="Enter amount"
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#b01257]"
+                  value={formData.openingBalance}
+                  onChange={(e) => handleInputChange("openingBalance", e.target.value)}
+                />
+                <select
+                  className="border border-gray-300 rounded px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#b01257]"
+                  value={formData.balanceType}
+                  onChange={(e) => handleInputChange("balanceType", e.target.value)}
+                >
                   <option value="GAVE">You Gave</option>
                   <option value="GOT">You Got</option>
                 </select>
@@ -126,7 +206,13 @@ const AddCustomerDrawer: React.FC<AddCustomerDrawerProps> = ({ show, onClose }) 
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                    <textarea placeholder="Enter Address" className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#b01257] resize-none" rows={2} />
+                    <textarea
+                      placeholder="Enter Address"
+                      className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#b01257] resize-none"
+                      rows={2}
+                      value={formData.address}
+                      onChange={(e) => handleInputChange("address", e.target.value)}
+                    />
                   </div>
                 </div>
               </details>
@@ -137,9 +223,10 @@ const AddCustomerDrawer: React.FC<AddCustomerDrawerProps> = ({ show, onClose }) 
             <button
               type="submit"
               form="add-customer-form"
+              disabled={isSubmitting}
               className="w-full px-8 py-2 rounded-full bg-[#b01257] text-white text-lg font-semibold shadow-xl hover:bg-[#a0004a] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Add Customer
+              {isSubmitting ? "Adding..." : "Add Customer"}
             </button>
           </div>
         </div>

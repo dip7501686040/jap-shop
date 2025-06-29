@@ -4,14 +4,21 @@ import AddCustomerDrawer from "./AddCustomerDrawer"
 import AddCustomerButton from "./AddCustomerButton"
 import CustomerListHeader from "./CustomerListHeader"
 import CustomerListFilterBar from "./CustomerListFilterBar"
+import { CreateCustomerRequest, UpdateCustomerRequest, Customer as ApiCustomer, Entry } from "../../lib/api-services"
 
 export interface Customer {
-  id: number
+  id: string
   name: string
+  email?: string
+  phone?: string
+  address?: string
   status: string
   debits: number
   credits: number
   amount: number
+  entries?: Entry[]
+  createdAt?: string
+  updatedAt?: string
 }
 
 interface CustomerListSectionProps {
@@ -20,9 +27,21 @@ interface CustomerListSectionProps {
   customers: Customer[]
   selectedCustomer: Customer | null
   onSelectCustomer: (customer: Customer) => void
+  onCreateCustomer?: (customerData: CreateCustomerRequest, openingBalance?: { amount: number; type: "GAVE" | "GOT" }) => Promise<ApiCustomer>
+  onUpdateCustomer?: (id: string, customerData: UpdateCustomerRequest) => Promise<ApiCustomer>
+  onDeleteCustomer?: (id: string) => Promise<void>
 }
 
-const CustomerListSection: React.FC<CustomerListSectionProps> = ({ debits, credits, customers, selectedCustomer, onSelectCustomer }) => {
+const CustomerListSection: React.FC<CustomerListSectionProps> = ({
+  debits,
+  credits,
+  customers,
+  selectedCustomer,
+  onSelectCustomer,
+  onCreateCustomer,
+  onUpdateCustomer: _onUpdateCustomer, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onDeleteCustomer: _onDeleteCustomer // eslint-disable-line @typescript-eslint/no-unused-vars
+}) => {
   const [showAddDrawer, setShowAddDrawer] = useState(false)
 
   return (
@@ -36,7 +55,7 @@ const CustomerListSection: React.FC<CustomerListSectionProps> = ({ debits, credi
         </div>
       </div>
       <AddCustomerButton onClick={() => setShowAddDrawer(true)} />
-      <AddCustomerDrawer show={showAddDrawer} onClose={() => setShowAddDrawer(false)} />
+      <AddCustomerDrawer show={showAddDrawer} onClose={() => setShowAddDrawer(false)} onCreateCustomer={onCreateCustomer} />
     </div>
   )
 }

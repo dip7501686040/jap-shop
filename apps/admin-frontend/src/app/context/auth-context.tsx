@@ -49,6 +49,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const response = await AuthService.getCurrentUser()
           if (response.success) {
             setUser(response.data)
+            // If on login or auth page, redirect to dashboard
+            if (window.location.pathname.startsWith("/auth")) {
+              router.push("/dashboard")
+            }
           } else {
             // Token is invalid, clear cookies
             tokenStorage.clearTokens()

@@ -2,22 +2,15 @@ import React from "react"
 import EntryDetailsModal from "./EntryDetailsModal"
 import EntryList from "./EntryList"
 import CalculatorDialog from "./CalculatorDialog"
-import { ArrowLeft, File, IndianRupee, MessageCircle, MoreVertical, PhoneCall } from "lucide-react"
+import { ArrowLeft, File, IndianRupee, MessageCircle, PhoneCall, Edit3 } from "lucide-react"
+import { Customer } from "./CustomerListSection"
 
 interface Entry {
-  id: number
+  id: string
   type: "GAVE" | "GOT"
   amount: number
   date: string
   time: string
-}
-
-interface Customer {
-  id: number
-  name: string
-  status: string
-  debits: number
-  credits: number
 }
 
 interface CustomerDetailsSectionProps {
@@ -28,12 +21,51 @@ interface CustomerDetailsSectionProps {
   showCalculator: "GAVE" | "GOT" | null
   setShowCalculator: (type: "GAVE" | "GOT" | null) => void
   calcValue: string
-  setCalcValue: (val: string) => void
+  setCalcValue: (value: string) => void
   onBack: () => void
   isMobile: boolean
+  onEditCustomer?: (customer: Customer) => void
+  onDeleteCustomer?: (id: string) => Promise<void>
+  onSaveEntry?: (amount: number, type: "GAVE" | "GOT", entryId?: string) => Promise<void>
+  onDeleteEntry?: (entryId: string) => Promise<void>
 }
 
-const CustomerDetailsSection: React.FC<CustomerDetailsSectionProps> = ({ selectedCustomer, entries, selectedEntry, setSelectedEntry, showCalculator, setShowCalculator, calcValue, setCalcValue, onBack, isMobile }) => {
+const CustomerDetailsSection: React.FC<CustomerDetailsSectionProps> = ({
+  selectedCustomer,
+  entries,
+  selectedEntry,
+  setSelectedEntry,
+  showCalculator,
+  setShowCalculator,
+  calcValue,
+  setCalcValue,
+  onBack,
+  isMobile,
+  onEditCustomer,
+  onDeleteCustomer: _onDeleteCustomer, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onSaveEntry,
+  onDeleteEntry
+}) => {
+  // Track if we're editing an existing entry
+  const [editingEntryId, setEditingEntryId] = React.useState<string | undefined>()
+
+  const handleCalculatorClose = () => {
+    setShowCalculator(null)
+    setEditingEntryId(undefined)
+  }
+
+  // Calculate running balance for selected entry
+  const getRunningBalanceForEntry = (targetEntry: Entry) => {
+    // Since entries are sorted newest first, we need to work with oldest first for calculation
+    const entriesOldestFirst = [...entries].reverse()
+    const entryIndex = entriesOldestFirst.findIndex((e) => e.id === targetEntry.id)
+    if (entryIndex === -1) return 0
+
+    const entriesUpToThis = entriesOldestFirst.slice(0, entryIndex + 1)
+    return entriesUpToThis.reduce((acc, e) => {
+      return e.type === "GOT" ? acc + e.amount : acc - e.amount
+    }, 0)
+  }
   if (!selectedCustomer) {
     return (
       <div className="hidden md:flex items-center w-full md:w-1/2 justify-center h-full text-gray-400" style={{ boxShadow: "-10px 0 15px -3px rgba(0, 0, 0, 0.1)" }}>
@@ -65,22 +97,54 @@ const CustomerDetailsSection: React.FC<CustomerDetailsSectionProps> = ({ selecte
             </div>
           </div>
         </div>
-        {/* Right: Call and More icons */}
+        {/* Right: Call and Edit icons */}
         <div className="flex items-center space-x-4 ml-2">
           <PhoneCall className="text-white" />
-          <MoreVertical className="text-white" />
+          <button onClick={() => onEditCustomer?.(selectedCustomer)} className="text-white hover:text-gray-300">
+            <Edit3 size={20} />
+          </button>
         </div>
       </div>
 
       {/* Status Card */}
       <div className="px-4 pt-4 pb-2">
-        <div className="bg-[#232225] rounded-2xl flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <span className="text-white font-semibold text-xl">Settled Up</span>
-            <span className="text-green-400 text-xl">😊</span>
-          </div>
-          <span className="text-white text-xl font-semibold">₹ 0</span>
-        </div>
+        {(() => {
+          const totalBalance = entries.reduce((acc, entry) => {
+            return entry.type === "GOT" ? acc + entry.amount : acc - entry.amount
+          }, 0)
+
+          if (totalBalance === 0) {
+            return (
+              <div className="bg-[#232225] rounded-2xl flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-white font-semibold text-xl">Settled Up</span>
+                  <span className="text-green-400 text-xl">😊</span>
+                </div>
+                <span className="text-white text-xl font-semibold">₹ 0</span>
+              </div>
+            )
+          } else if (totalBalance > 0) {
+            return (
+              <div className="bg-[#1e3a2e] rounded-2xl flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-white font-semibold text-xl">You will get</span>
+                  <span className="text-green-400 text-xl">💰</span>
+                </div>
+                <span className="text-green-400 text-xl font-semibold">₹ {totalBalance}</span>
+              </div>
+            )
+          } else {
+            return (
+              <div className="bg-[#3a1e1e] rounded-2xl flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-white font-semibold text-xl">You will give</span>
+                  <span className="text-red-400 text-xl">💸</span>
+                </div>
+                <span className="text-red-400 text-xl font-semibold">₹ {Math.abs(totalBalance)}</span>
+              </div>
+            )
+          }
+        })()}
       </div>
 
       {/* Tab Bar */}
@@ -132,6 +196,7 @@ const CustomerDetailsSection: React.FC<CustomerDetailsSectionProps> = ({ selecte
           onClick={() => {
             setShowCalculator("GAVE")
             setCalcValue("")
+            setEditingEntryId(undefined)
           }}
         >
           YOU GAVE ₹
@@ -141,6 +206,7 @@ const CustomerDetailsSection: React.FC<CustomerDetailsSectionProps> = ({ selecte
           onClick={() => {
             setShowCalculator("GOT")
             setCalcValue("")
+            setEditingEntryId(undefined)
           }}
         >
           YOU GOT ₹
@@ -158,8 +224,11 @@ const CustomerDetailsSection: React.FC<CustomerDetailsSectionProps> = ({ selecte
             onEdit={() => {
               setShowCalculator(selectedEntry!.type)
               setCalcValue(selectedEntry!.amount.toString())
+              setEditingEntryId(selectedEntry!.id)
               setSelectedEntry(null)
             }}
+            onDelete={onDeleteEntry}
+            runningBalance={getRunningBalanceForEntry(selectedEntry!)}
             // mobile: full screen, so containerMode not set
           />
         ) : (
@@ -174,8 +243,11 @@ const CustomerDetailsSection: React.FC<CustomerDetailsSectionProps> = ({ selecte
                   onEdit={() => {
                     setShowCalculator(selectedEntry!.type)
                     setCalcValue(selectedEntry!.amount.toString())
+                    setEditingEntryId(selectedEntry!.id)
                     setSelectedEntry(null)
                   }}
+                  onDelete={onDeleteEntry}
+                  runningBalance={getRunningBalanceForEntry(selectedEntry!)}
                   containerMode={true}
                 />
               </div>
@@ -188,10 +260,12 @@ const CustomerDetailsSection: React.FC<CustomerDetailsSectionProps> = ({ selecte
         (isMobile ? (
           <CalculatorDialog
             open={!!showCalculator}
-            onClose={() => setShowCalculator(null)}
+            onClose={handleCalculatorClose}
             type={showCalculator as "GAVE" | "GOT"}
             customerName={selectedCustomer.name}
             initialAmount={calcValue}
+            onSave={onSaveEntry}
+            entryId={editingEntryId}
             // mobile: full screen, so containerMode not set
           />
         ) : (
@@ -200,10 +274,12 @@ const CustomerDetailsSection: React.FC<CustomerDetailsSectionProps> = ({ selecte
               <div className="w-full">
                 <CalculatorDialog
                   open={!!showCalculator}
-                  onClose={() => setShowCalculator(null)}
+                  onClose={handleCalculatorClose}
                   type={showCalculator as "GAVE" | "GOT"}
                   customerName={selectedCustomer.name}
                   initialAmount={calcValue}
+                  onSave={onSaveEntry}
+                  entryId={editingEntryId}
                   containerMode={true}
                 />
               </div>
