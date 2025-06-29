@@ -67,7 +67,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     checkAuth()
-  }, [])
+  }, [router])
 
   // Login function
   const login = async (email: string, password: string): Promise<boolean | "otp_required"> => {

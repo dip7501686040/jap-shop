@@ -32,10 +32,6 @@ function Customers() {
   const [totalDebits, setTotalDebits] = useState(0)
   const [totalCredits, setTotalCredits] = useState(0)
 
-  // Calculate totals from customer data
-  const debits = customers.reduce((total, customer) => total + customer.debits, 0)
-  const credits = customers.reduce((total, customer) => total + customer.credits, 0)
-
   // Convert entries for selected customer to display format
   const entries: ComponentEntry[] =
     selectedCustomer?.entries
@@ -237,8 +233,8 @@ function Customers() {
         setTotalDebits(response.data.totalDebits)
         setTotalCredits(response.data.totalCredits)
       }
-    } catch (err) {
-      // Optionally handle error
+    } catch (error) {
+      console.error("Failed to fetch summary:", error)
     }
   }
 
