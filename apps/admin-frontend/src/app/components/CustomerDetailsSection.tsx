@@ -127,7 +127,7 @@ const CustomerDetailsSection: React.FC<CustomerDetailsSectionProps> = ({
             return (
               <div className="bg-[#1e3a2e] rounded-2xl flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-white font-semibold text-xl">You have got</span>
+                  <span className="text-white font-semibold text-xl">You have credit</span>
                   <span className="text-green-400 text-xl">💰</span>
                 </div>
                 <span className="text-green-400 text-xl font-semibold">₹ {totalBalance}</span>
@@ -137,7 +137,7 @@ const CustomerDetailsSection: React.FC<CustomerDetailsSectionProps> = ({
             return (
               <div className="bg-[#3a1e1e] rounded-2xl flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-white font-semibold text-xl">You have given</span>
+                  <span className="text-white font-semibold text-xl">You have debit</span>
                   <span className="text-red-400 text-xl">💸</span>
                 </div>
                 <span className="text-red-400 text-xl font-semibold">₹ {Math.abs(totalBalance)}</span>
