@@ -104,9 +104,8 @@ function Customers() {
           }
           await EntryService.createEntry(entryData)
         }
-
-        await fetchCustomers() // Refresh the list
         await fetchSummary() // Refresh summary after creating customer
+        await fetchCustomers() // Refresh the list
         return response.data
       } else {
         throw new Error(response.message || "Failed to create customer")
@@ -136,8 +135,8 @@ function Customers() {
     try {
       const response = await CustomerService.deleteCustomer(id)
       if (response.success) {
-        await fetchCustomers() // Refresh the list
         await fetchSummary() // Refresh summary after deleting customer
+        await fetchCustomers() // Refresh the list
         if (selectedCustomer?.id === id) {
           setSelectedCustomer(null) // Clear selection if deleted customer was selected
         }
@@ -152,8 +151,8 @@ function Customers() {
 
   // Helper function to refresh data and update selected customer
   const refreshDataAndSelectedCustomer = async () => {
-    const updatedCustomers = await fetchCustomers()
     await fetchSummary() // Refresh summary data to update header
+    const updatedCustomers = await fetchCustomers()
     if (selectedCustomer && updatedCustomers.length > 0) {
       const updatedCustomer = updatedCustomers.find((c) => c.id === selectedCustomer.id)
       if (updatedCustomer) {
