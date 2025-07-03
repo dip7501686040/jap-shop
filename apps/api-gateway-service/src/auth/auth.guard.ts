@@ -47,8 +47,13 @@ export class AuthGuard extends NestAuthGuard('jwt') {
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any) {
-    // You can throw an exception based on either "info" or "err" arguments
+  handleRequest<TUser = any>(
+    err: any,
+    user: any,
+    info: any,
+    context: ExecutionContext,
+    status?: any,
+  ): TUser {
     if (err || !user) {
       throw err || new UnauthorizedException('Authentication failed');
     }

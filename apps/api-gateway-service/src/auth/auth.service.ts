@@ -2,7 +2,6 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
-  NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
 import { UserService } from '../user/user.service';
@@ -13,15 +12,11 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as nodemailer from 'nodemailer';
 import * as crypto from 'crypto';
-import { User } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import {
   transformUserMenus,
   transformToRolePermissions,
   transformToMenuPermissions,
-  UserMenus,
-  RolePermissions,
-  MenuPermissions,
 } from '../common/permissions.helper';
 
 @Injectable()
@@ -102,7 +97,13 @@ export class AuthService {
     };
   }
 
-  async loginWithUser(user: any) {
+  async loginWithUser(user: {
+    id: string;
+    email: string;
+    role?: { id: string; name: string };
+    name: string;
+    password?: string;
+  }) {
     // Generate access and refresh tokens
     const tokenPayload = {
       id: user.id,
@@ -112,7 +113,9 @@ export class AuthService {
       name: user.name,
     };
 
-    const tokens = this.jwtService.generateTokenPair(tokenPayload);
+    const tokens = await Promise.resolve(
+      this.jwtService.generateTokenPair(tokenPayload),
+    );
 
     // Remove password from response and add permissions
     const { password, ...result } = user;
@@ -203,6 +206,7 @@ export class AuthService {
 
   async verifyOtp(email: string, otp: string): Promise<boolean> {
     // Mock OTP verification logic
+    await Promise.resolve(); // ensure function is truly async
     return otp === '123456';
   }
 

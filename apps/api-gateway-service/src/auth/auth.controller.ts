@@ -127,7 +127,12 @@ export class AuthController {
       throw new UnauthorizedException('Invalid OTP or unauthorized role');
     }
 
-    return this.authService.loginWithUser(user);
+    // Ensure role is undefined if null
+    const safeUser = {
+      ...user,
+      role: user.role === null ? undefined : user.role,
+    };
+    return this.authService.loginWithUser(safeUser);
   }
 
   @ApiOperation({ summary: 'Get user profile' })
@@ -137,9 +142,17 @@ export class AuthController {
   })
   @ApiBearerAuth()
   @Get('/profile')
-  getProfile(@Request() req) {
-    // This route is protected by the AuthGuard
-    // req.user is populated by Passport
+  getProfile(
+    @Request()
+    req: {
+      user: {
+        id: string;
+        email: string;
+        name: string;
+        role?: { id: string; name: string };
+      };
+    },
+  ) {
     return req.user;
   }
 
@@ -150,7 +163,7 @@ export class AuthController {
   })
   @ApiBearerAuth()
   @Get('/me')
-  async getCurrentUser(@Request() req) {
+  async getCurrentUser(@Request() req: { user: { id: string } }) {
     // This route is protected by the AuthGuard
     // req.user is populated by Passport but might not have latest permissions
     // Fetch fresh user data with permissions
@@ -265,7 +278,9 @@ export class AuthController {
   })
   @ApiBearerAuth()
   @Get('/menus')
-  async getUserMenus(@Request() req): Promise<CustomApiResponse<any[]>> {
+  async getUserMenus(
+    @Request() req: { user: { id: string } },
+  ): Promise<CustomApiResponse<any[]>> {
     const userId = req.user.id;
 
     if (!userId) {
@@ -296,7 +311,7 @@ export class AuthController {
   })
   @ApiBearerAuth()
   @Get('/test-user-access')
-  async testUserAccess(@Request() req) {
+  async testUserAccess(@Request() req: { user: { id: string } }) {
     const userId = req.user.id;
     const userWithMenus = await this.userService.findOne(userId);
 

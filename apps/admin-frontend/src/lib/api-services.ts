@@ -414,13 +414,13 @@ export const deleteMenu = async (id: string): Promise<ApiResponse<null>> => {
   return response.data
 }
 
-export const assignMenuToRole = async (menuId: string, roleId: string): Promise<ApiResponse<any>> => {
-  const response = await apiClient.post<ApiResponse<any>>(`/menus/${menuId}/assign/${roleId}`)
+export const assignMenuToRole = async (menuId: string, roleId: string): Promise<ApiResponse<void>> => {
+  const response = await apiClient.post<ApiResponse<void>>(`/menus/${menuId}/assign/${roleId}`)
   return response.data
 }
 
-export const removeMenuFromRole = async (menuId: string, roleId: string): Promise<ApiResponse<any>> => {
-  const response = await apiClient.delete<ApiResponse<any>>(`/menus/${menuId}/assign/${roleId}`)
+export const removeMenuFromRole = async (menuId: string, roleId: string): Promise<ApiResponse<void>> => {
+  const response = await apiClient.delete<ApiResponse<void>>(`/menus/${menuId}/assign/${roleId}`)
   return response.data
 }
 
