@@ -1,9 +1,9 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { tokenStorage } from "@/lib/cookies"
-import { AuthService, type User, type LoginRequest, type SignupRequest, type VerifyOtpRequest } from "@/lib/api-services"
+import { AuthService, type User, type LoginRequest, type SignupRequest, type VerifyOtpRequest, getUserMenus, Menu } from "@/lib/api-services"
 import { handleApiError } from "@/hooks/useApi"
 
 // Auth context interface
@@ -22,6 +22,11 @@ interface AuthContextType {
   passwordVisibility: Record<string, boolean>
   togglePasswordVisibility: (fieldId: string) => void
   setPasswordVisibility: (fieldId: string, visible: boolean) => void
+  // Menu state
+  menus: Menu[]
+  menuLoading: boolean
+  menuError: string | null
+  refetchMenus: () => Promise<void>
 }
 
 // Create the auth context
@@ -38,7 +43,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [passwordVisibility, setPasswordVisibilityState] = useState<Record<string, boolean>>({})
+  const [menus, setMenus] = useState<Menu[]>([])
+  const [menuLoading, setMenuLoading] = useState(true)
+  const [menuError, setMenuError] = useState<string | null>(null)
   const router = useRouter()
+
+  // Common function to set user and menus together
+  const setUserAndMenus = useCallback(async (user: User | null) => {
+    setUser(user)
+    if (user) {
+      // Fetch menus when user is set
+      try {
+        setMenuLoading(true)
+        setMenuError(null)
+        const response = await getUserMenus()
+        if (response.success) {
+          setMenus(response.data)
+        } else {
+          setMenuError("Failed to fetch menus")
+          setMenus([])
+        }
+      } catch (err) {
+        setMenuError("Failed to fetch menus")
+        setMenus([])
+        console.error("Error fetching user menus:", err)
+      } finally {
+        setMenuLoading(false)
+      }
+    } else {
+      // Clear menus when user is null
+      setMenus([])
+      setMenuError(null)
+      setMenuLoading(false)
+    }
+  }, [])
 
   // Check if user is logged in on component mount
   useEffect(() => {
@@ -49,7 +87,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           // Verify token and get user data
           const response = await AuthService.getCurrentUser()
           if (response.success && response.data) {
-            setUser(response.data)
+            setUserAndMenus(response.data)
             // If on login or auth page, redirect to dashboard
             if (window.location.pathname.startsWith("/auth")) {
               router.push("/dashboard")
@@ -79,12 +117,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
               const payload = JSON.parse(atob(token.split(".")[1]))
               if (payload.exp * 1000 > Date.now()) {
                 // Token is not expired, create minimal user object
-                setUser({
+                const userData = {
                   id: payload.id,
                   email: payload.email,
                   name: payload.name,
                   role: { id: payload.role_id, name: payload.role }
-                } as User)
+                } as User
+                setUserAndMenus(userData)
               } else {
                 // Token is expired
                 tokenStorage.clearTokens()
@@ -122,7 +161,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Save tokens in cookies
       tokenStorage.setAccessToken(accessToken)
       tokenStorage.setRefreshToken(refreshToken)
-      setUser(user)
+      setUserAndMenus(user)
 
       return true
     } catch (err) {
@@ -149,7 +188,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Save tokens in cookies
         tokenStorage.setAccessToken(accessToken)
         tokenStorage.setRefreshToken(refreshToken)
-        setUser(user)
+        setUserAndMenus(user)
 
         return true
       } else {
@@ -221,8 +260,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error) {
       console.error("Logout error:", error)
     } finally {
-      // Clear local state and cookies regardless of API call result
-      setUser(null)
+      setUserAndMenus(null)
       setError(null)
       tokenStorage.clearTokens()
       setIsLoading(false)
@@ -237,7 +275,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (token) {
         const response = await AuthService.getCurrentUser()
         if (response.success && response.data) {
-          setUser(response.data)
+          setUserAndMenus(response.data)
         }
       }
     } catch (error) {
@@ -283,6 +321,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }))
   }
 
+  // Menu functions
+  const fetchMenus = useCallback(async () => {
+    try {
+      setMenuLoading(true)
+      setMenuError(null)
+      const response = await getUserMenus()
+      if (response.success) {
+        setMenus(response.data)
+      } else {
+        setMenuError("Failed to fetch menus")
+      }
+    } catch (err) {
+      setMenuError("Failed to fetch menus")
+      console.error("Error fetching user menus:", err)
+    } finally {
+      setMenuLoading(false)
+    }
+  }, [])
+
+  const refetchMenus = useCallback(async () => {
+    await fetchMenus()
+  }, [fetchMenus])
+
   // Context value
   const value = {
     user,
@@ -297,7 +358,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     error,
     passwordVisibility,
     togglePasswordVisibility,
-    setPasswordVisibility
+    setPasswordVisibility,
+    menus,
+    menuLoading,
+    menuError,
+    refetchMenus
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

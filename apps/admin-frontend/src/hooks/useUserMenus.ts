@@ -1,13 +1,13 @@
 "use client"
-import { useMenusContext } from "@/app/context/menus-context"
+import { useAuth } from "@/app/context/auth-context"
 
 export const useUserMenus = () => {
-  const { menus, loading, error, refetchMenus } = useMenusContext()
+  const { menus, menuLoading, menuError, refetchMenus } = useAuth()
 
   return {
     menus,
-    loading,
-    error,
+    loading: menuLoading,
+    error: menuError,
     refetch: refetchMenus
   }
 }

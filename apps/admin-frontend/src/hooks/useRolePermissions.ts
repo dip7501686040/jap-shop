@@ -38,11 +38,6 @@ export function useMenuPermissions() {
   return user?.menuPermissions || {}
 }
 
-export function useUserMenus() {
-  const { user } = useAuth()
-  return user?.userMenus || []
-}
-
 export function useCanPerformAction(menuName: string, action: "canAdd" | "canRead" | "canUpdate" | "canDelete"): boolean {
   const menuPermissions = useMenuPermissions()
   return menuPermissions[menuName]?.[action] || false
