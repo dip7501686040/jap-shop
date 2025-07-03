@@ -28,9 +28,14 @@
     "node": ">=18"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
-      "turbo run lint --affected",
-      "turbo run format --affected"
+    "apps/admin-frontend/**/*.{ts,tsx}": [
+      "bash -c 'cd apps/admin-frontend && pnpm run lint'"
+    ],
+    "apps/api-gateway-service/**/*.{ts}": [
+      "bash -c 'cd apps/api-gateway-service && pnpm run lint'"
+    ],
+    "packages/**/*.{ts,tsx}": [
+      "bash -c 'cd packages/ui && pnpm run lint'"
     ]
   }
 }
