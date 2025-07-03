@@ -13,6 +13,7 @@
     "build:prd": "APP_ENV=prd next build",
     "start:prd": "APP_ENV=prd next start",
     "lint": "next lint",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "docker:build:dev": "docker build -t dip75016860/jap-shop-admin-frontend:dev .",
     "docker:push:dev": "docker push dip75016860/jap-shop-admin-frontend:dev"
   },
@@ -34,6 +35,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.2.4",
+    "prettier": "^3.6.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
