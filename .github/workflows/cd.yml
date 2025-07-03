@@ -53,16 +53,8 @@ jobs:
           echo "Deploying apps: $AFFECTED"
           for app_name in $(echo "$AFFECTED" | jq -r '.[]'); do
             echo "Deploying $app_name with image tag $COMMIT_ID"
-            
             # Export COMMIT_ID for envsubst to use
             export COMMIT_ID
-            
-            # Apply secret if it's api-gateway-service
-            if [ "$app_name" = "api-gateway-service" ]; then
-              echo "Applying secret for $app_name"
-              kubectl apply -f k8s/$app_name/secret.yml
-            fi
-            
             # Substitute image tag into template and apply
             envsubst < k8s/$app_name/deployment.yml | kubectl apply -f -
             kubectl apply -f k8s/$app_name/service.yml
