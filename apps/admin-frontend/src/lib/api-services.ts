@@ -21,6 +21,37 @@ export interface User {
   role?: Role
   createdAt: string
   updatedAt: string
+  userMenus?: UserMenus
+  rolePermissions?: RolePermissions
+  menuPermissions?: MenuPermissions
+}
+
+export interface UserMenu {
+  id: string
+  name: string
+  href: string
+  icon: string
+  order: number
+  isActive: boolean
+  canAdd: boolean
+  canRead: boolean
+  canUpdate: boolean
+  canDelete: boolean
+}
+
+export type UserMenus = UserMenu[]
+
+export interface RolePermissions {
+  [key: string]: boolean
+}
+
+export interface MenuPermissions {
+  [key: string]: {
+    canAdd: boolean
+    canRead: boolean
+    canUpdate: boolean
+    canDelete: boolean
+  }
 }
 
 export interface LoginRequest {
@@ -100,6 +131,42 @@ export interface UpdateEntryRequest {
   customerId?: string
 }
 
+export interface UpdateUserRequest {
+  name?: string
+  email?: string
+  roleId?: string
+}
+
+export interface CreateRoleRequest {
+  name: string
+  description?: string
+}
+
+export interface UpdateRoleRequest {
+  name?: string
+  description?: string
+}
+
+export interface Menu {
+  id: string
+  name: string
+  href: string
+  icon?: string
+  order: number
+  isActive: boolean
+  parentId?: string
+  parent?: Menu
+  children?: Menu[]
+  roleMenus?: Array<{
+    id: string
+    roleId: string
+    menuId: string
+    role: Role
+  }>
+  createdAt: string
+  updatedAt: string
+}
+
 // Auth API service
 export class AuthService {
   private static readonly BASE_PATH = "/auth"
@@ -154,10 +221,10 @@ export class AuthService {
 
 // User API service
 export class UserService {
-  private static readonly BASE_PATH = "/users"
+  private static readonly BASE_PATH = "/user"
 
-  static async getUsers(page = 1, limit = 10): Promise<ApiResponse<{ users: User[]; total: number }>> {
-    const response = await apiClient.get<ApiResponse<{ users: User[]; total: number }>>(`${this.BASE_PATH}?page=${page}&limit=${limit}`)
+  static async getUsers(): Promise<ApiResponse<User[]>> {
+    const response = await apiClient.get<ApiResponse<User[]>>(`${this.BASE_PATH}`)
     return response.data
   }
 
@@ -166,8 +233,8 @@ export class UserService {
     return response.data
   }
 
-  static async updateUser(id: string, userData: Partial<User>): Promise<ApiResponse<User>> {
-    const response = await apiClient.put<ApiResponse<User>>(`${this.BASE_PATH}/${id}`, userData)
+  static async updateUser(id: string, userData: UpdateUserRequest): Promise<ApiResponse<User>> {
+    const response = await apiClient.patch<ApiResponse<User>>(`${this.BASE_PATH}/${id}`, userData)
     return response.data
   }
 
@@ -176,6 +243,39 @@ export class UserService {
     return response.data
   }
 }
+
+// Role API service
+export class RoleService {
+  private static readonly BASE_PATH = "/roles"
+
+  static async getRoles(): Promise<ApiResponse<Role[]>> {
+    const response = await apiClient.get<ApiResponse<Role[]>>(`${this.BASE_PATH}`)
+    return response.data
+  }
+
+  static async getRoleById(id: string): Promise<ApiResponse<Role>> {
+    const response = await apiClient.get<ApiResponse<Role>>(`${this.BASE_PATH}/${id}`)
+    return response.data
+  }
+
+  static async createRole(roleData: CreateRoleRequest): Promise<ApiResponse<Role>> {
+    const response = await apiClient.post<ApiResponse<Role>>(`${this.BASE_PATH}`, roleData)
+    return response.data
+  }
+
+  static async updateRole(id: string, roleData: UpdateRoleRequest): Promise<ApiResponse<Role>> {
+    const response = await apiClient.patch<ApiResponse<Role>>(`${this.BASE_PATH}/${id}`, roleData)
+    return response.data
+  }
+
+  static async deleteRole(id: string): Promise<ApiResponse<null>> {
+    const response = await apiClient.delete<ApiResponse<null>>(`${this.BASE_PATH}/${id}`)
+    return response.data
+  }
+}
+
+// Alias for convenience
+export const getAllRoles = RoleService.getRoles
 
 // Dashboard API service
 export class DashboardService {
@@ -281,6 +381,52 @@ export class EntryService {
     const response = await apiClient.get<ApiResponse<number>>(`${this.BASE_PATH}/customer/${customerId}/gave-balance`)
     return response.data
   }
+}
+
+// Menu API functions
+export const getUserMenus = async (): Promise<ApiResponse<Menu[]>> => {
+  const response = await apiClient.get<ApiResponse<Menu[]>>("/auth/menus")
+  return response.data
+}
+
+export const getAllMenus = async (): Promise<ApiResponse<Menu[]>> => {
+  const response = await apiClient.get<ApiResponse<Menu[]>>("/menus")
+  return response.data
+}
+
+export const getMenuById = async (id: string): Promise<ApiResponse<Menu>> => {
+  const response = await apiClient.get<ApiResponse<Menu>>(`/menus/${id}`)
+  return response.data
+}
+
+export const createMenu = async (menuData: Partial<Menu>): Promise<ApiResponse<Menu>> => {
+  const response = await apiClient.post<ApiResponse<Menu>>("/menus", menuData)
+  return response.data
+}
+
+export const updateMenu = async (id: string, menuData: Partial<Menu>): Promise<ApiResponse<Menu>> => {
+  const response = await apiClient.patch<ApiResponse<Menu>>(`/menus/${id}`, menuData)
+  return response.data
+}
+
+export const deleteMenu = async (id: string): Promise<ApiResponse<null>> => {
+  const response = await apiClient.delete<ApiResponse<null>>(`/menus/${id}`)
+  return response.data
+}
+
+export const assignMenuToRole = async (menuId: string, roleId: string): Promise<ApiResponse<any>> => {
+  const response = await apiClient.post<ApiResponse<any>>(`/menus/${menuId}/assign/${roleId}`)
+  return response.data
+}
+
+export const removeMenuFromRole = async (menuId: string, roleId: string): Promise<ApiResponse<any>> => {
+  const response = await apiClient.delete<ApiResponse<any>>(`/menus/${menuId}/assign/${roleId}`)
+  return response.data
+}
+
+export const getMenusByRole = async (roleId: string): Promise<ApiResponse<Menu[]>> => {
+  const response = await apiClient.get<ApiResponse<Menu[]>>(`/menus/role/${roleId}`)
+  return response.data
 }
 
 // Generic API service for custom endpoints

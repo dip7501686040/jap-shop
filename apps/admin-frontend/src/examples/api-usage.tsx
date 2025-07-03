@@ -1,7 +1,7 @@
 // Example usage of API services and hooks
 
 import { useApi, useMutation, useQuery } from "@/hooks/useApi"
-import { AuthService, UserService, DashboardService } from "@/lib/api-services"
+import { AuthService, UserService, DashboardService, User } from "@/lib/api-services"
 
 // Example 1: Using the useQuery hook for fetching data
 export function UsersList() {
@@ -10,7 +10,7 @@ export function UsersList() {
     loading,
     error,
     refetch
-  } = useQuery("users-list", () => UserService.getUsers(1, 10), {
+  } = useQuery("users-list", () => UserService.getUsers(), {
     executeOnMount: true,
     refetchInterval: 30000 // Refetch every 30 seconds
   })
@@ -23,7 +23,7 @@ export function UsersList() {
     <div>
       <button onClick={refetch}>Refresh Users</button>
       <ul>
-        {usersData.data.users.map((user) => (
+        {usersData.data.map((user: User) => (
           <li key={user.id}>
             {user.name} - {user.email}
           </li>

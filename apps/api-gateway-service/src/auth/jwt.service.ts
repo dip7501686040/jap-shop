@@ -17,7 +17,7 @@ export class JwtService {
 
   generateRefreshToken(payload: any): string {
     return this.nestJwtService.sign(
-      { sub: payload.user_id, email: payload.email }, // Minimal payload for refresh token
+      { id: payload.id, email: payload.email }, // Minimal payload for refresh token
       {
         expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d', // Long-lived refresh token
       },

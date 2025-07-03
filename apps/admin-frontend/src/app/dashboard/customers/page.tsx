@@ -5,6 +5,7 @@ import CustomerDetailsSection from "../../components/CustomerDetailsSection"
 import EditCustomerDrawer from "../../components/EditCustomerDrawer"
 import { CustomerService, Customer, CreateCustomerRequest, UpdateCustomerRequest, EntryService, CreateEntryRequest } from "../../../lib/api-services"
 import { Customer as ComponentCustomer } from "../../components/CustomerListSection"
+import { ProtectedRoute } from "@/app/components/ProtectedRoute"
 
 // Component Entry interface
 interface ComponentEntry {
@@ -16,7 +17,7 @@ interface ComponentEntry {
 }
 
 // Customers
-function Customers() {
+function CustomersContent() {
   // State management
   const [customers, setCustomers] = useState<ComponentCustomer[]>([])
   const [loading, setLoading] = useState(true)
@@ -305,4 +306,10 @@ function Customers() {
   )
 }
 
-export default Customers
+export default function Customers() {
+  return (
+    <ProtectedRoute requiredPermission="customers">
+      <CustomersContent />
+    </ProtectedRoute>
+  )
+}

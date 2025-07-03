@@ -14,6 +14,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { RoleService } from './role.service';
+import { createSuccessResponse } from '../common/api-response.dto';
 
 @ApiTags('Roles')
 @Controller('roles')
@@ -24,35 +25,40 @@ export class RoleController {
   @ApiOperation({ summary: 'Create a new role' })
   @ApiResponse({ status: 201, description: 'Role successfully created' })
   @Post()
-  create(@Body() createRoleDto: any) {
-    return this.roleService.create(createRoleDto);
+  async create(@Body() createRoleDto: any) {
+    const role = await this.roleService.create(createRoleDto);
+    return createSuccessResponse(role, 'Role successfully created');
   }
 
   @ApiOperation({ summary: 'Get all roles' })
   @ApiResponse({ status: 200, description: 'Returns all roles' })
   @Get()
-  findAll() {
-    return this.roleService.findAll();
+  async findAll() {
+    const roles = await this.roleService.findAll();
+    return createSuccessResponse(roles, 'Roles retrieved successfully');
   }
 
   @ApiOperation({ summary: 'Get role by ID' })
   @ApiResponse({ status: 200, description: 'Returns a role by ID' })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.roleService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    const role = await this.roleService.findOne(id);
+    return createSuccessResponse(role, 'Role retrieved successfully');
   }
 
   @ApiOperation({ summary: 'Update a role' })
   @ApiResponse({ status: 200, description: 'Role updated successfully' })
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRoleDto: any) {
-    return this.roleService.update(id, updateRoleDto);
+  async update(@Param('id') id: string, @Body() updateRoleDto: any) {
+    const role = await this.roleService.update(id, updateRoleDto);
+    return createSuccessResponse(role, 'Role updated successfully');
   }
 
   @ApiOperation({ summary: 'Delete a role' })
   @ApiResponse({ status: 200, description: 'Role deleted successfully' })
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.roleService.remove(id);
+  async remove(@Param('id') id: string) {
+    await this.roleService.remove(id);
+    return createSuccessResponse(null, 'Role deleted successfully');
   }
 }

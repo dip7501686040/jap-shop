@@ -15,6 +15,14 @@ import * as nodemailer from 'nodemailer';
 import * as crypto from 'crypto';
 import { User } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
+import {
+  transformUserMenus,
+  transformToRolePermissions,
+  transformToMenuPermissions,
+  UserMenus,
+  RolePermissions,
+  MenuPermissions,
+} from '../common/permissions.helper';
 
 @Injectable()
 export class AuthService {
@@ -64,7 +72,7 @@ export class AuthService {
 
     // Generate access and refresh tokens
     const tokenPayload = {
-      user_id: user.id,
+      id: user.id,
       email: user.email,
       role_id: user.role?.id,
       role: user.role?.name,
@@ -73,12 +81,20 @@ export class AuthService {
 
     const tokens = this.jwtService.generateTokenPair(tokenPayload);
 
-    // Remove password from response
+    // Remove password from response and add permissions
     const { password, ...result } = user;
+    const userMenus = transformUserMenus(user);
+    const rolePermissions = transformToRolePermissions(user);
+    const menuPermissions = transformToMenuPermissions(user);
 
     return {
       data: {
-        user: result,
+        user: {
+          ...result,
+          userMenus,
+          rolePermissions,
+          menuPermissions,
+        },
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
       },
@@ -89,7 +105,7 @@ export class AuthService {
   async loginWithUser(user: any) {
     // Generate access and refresh tokens
     const tokenPayload = {
-      user_id: user.id,
+      id: user.id,
       email: user.email,
       role_id: user.role?.id,
       role: user.role?.name,
@@ -98,12 +114,20 @@ export class AuthService {
 
     const tokens = this.jwtService.generateTokenPair(tokenPayload);
 
-    // Remove password from response
+    // Remove password from response and add permissions
     const { password, ...result } = user;
+    const userMenus = transformUserMenus(user);
+    const rolePermissions = transformToRolePermissions(user);
+    const menuPermissions = transformToMenuPermissions(user);
 
     return {
       data: {
-        user: result,
+        user: {
+          ...result,
+          userMenus,
+          rolePermissions,
+          menuPermissions,
+        },
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
       },
@@ -114,7 +138,17 @@ export class AuthService {
   async validateUser(loginDto: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: loginDto.email },
-      include: { role: true },
+      include: {
+        role: {
+          include: {
+            roleMenus: {
+              include: {
+                menu: true,
+              },
+            },
+          },
+        },
+      },
     });
     if (user) {
       // Verify password
@@ -185,7 +219,7 @@ export class AuthService {
 
     // Get user from database to ensure they still exist and get latest info
     const user = await this.prisma.user.findUnique({
-      where: { id: decoded.sub },
+      where: { id: decoded.id },
       include: { role: true },
     });
 
@@ -195,7 +229,7 @@ export class AuthService {
 
     // Generate new access token
     const tokenPayload = {
-      user_id: user.id,
+      id: user.id,
       email: user.email,
       role_id: user.role?.id,
       role: user.role?.name,

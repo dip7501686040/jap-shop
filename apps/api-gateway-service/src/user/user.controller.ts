@@ -16,6 +16,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { createSuccessResponse } from '../common/api-response.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -26,8 +27,9 @@ export class UserController {
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, description: 'Returns all users' })
   @Get()
-  findAll(@Request() req) {
-    return this.userService.findAll();
+  async findAll(@Request() req) {
+    const users = await this.userService.findAll();
+    return createSuccessResponse(users, 'Users retrieved successfully');
   }
 
   @ApiOperation({ summary: 'Get user by ID' })
@@ -35,8 +37,9 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'Returns a user by ID' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    const user = await this.userService.findOne(id);
+    return createSuccessResponse(user, 'User retrieved successfully');
   }
 
   @ApiOperation({ summary: 'Update a user' })
@@ -44,8 +47,9 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'User updated successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(id, updateUserDto);
+  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    const user = await this.userService.update(id, updateUserDto);
+    return createSuccessResponse(user, 'User updated successfully');
   }
 
   @ApiOperation({ summary: 'Delete a user' })
@@ -53,7 +57,8 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(id);
+  async remove(@Param('id') id: string) {
+    await this.userService.remove(id);
+    return createSuccessResponse(null, 'User deleted successfully');
   }
 }

@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -31,14 +32,30 @@ async function main() {
     },
   });
 
+  // Hash password for seed users
+  const hashedPassword = await bcrypt.hash('password123', 10);
+  const customSuperAdminPassword = await bcrypt.hash('password', 10);
+
   // Create sample users
   const superAdmin = await prisma.user.upsert({
     where: { email: 'superadmin@example.com' },
     update: {},
     create: {
       email: 'superadmin@example.com',
-      password: 'password123',
+      password: hashedPassword,
       name: 'Super Admin',
+      roleId: superAdminRole.id,
+    },
+  });
+
+  // Create custom superadmin user
+  const customSuperAdmin = await prisma.user.upsert({
+    where: { email: 'dip7001733750@gmail.com' },
+    update: {},
+    create: {
+      email: 'dip7001733750@gmail.com',
+      password: customSuperAdminPassword,
+      name: 'Dipankar Saha',
       roleId: superAdminRole.id,
     },
   });
@@ -48,7 +65,7 @@ async function main() {
     update: {},
     create: {
       email: 'admin@example.com',
-      password: 'password123',
+      password: hashedPassword,
       name: 'Admin User',
       roleId: adminRole.id,
     },
@@ -59,7 +76,7 @@ async function main() {
     update: {},
     create: {
       email: 'user@example.com',
-      password: 'password123',
+      password: hashedPassword,
       name: 'Regular User',
       roleId: userRole.id,
     },
@@ -109,6 +126,221 @@ async function main() {
       },
     ],
   });
+
+  // Create menus
+  const dashboardMenu = await prisma.menu.upsert({
+    where: { href: '/dashboard' },
+    update: {},
+    create: {
+      name: 'Dashboard',
+      href: '/dashboard',
+      icon: 'dashboard',
+      order: 1,
+      isActive: true,
+    },
+  });
+
+  const customersMenu = await prisma.menu.upsert({
+    where: { href: '/dashboard/customers' },
+    update: {},
+    create: {
+      name: 'Customers',
+      href: '/dashboard/customers',
+      icon: 'users',
+      order: 2,
+      isActive: true,
+    },
+  });
+
+  const productsMenu = await prisma.menu.upsert({
+    where: { href: '/dashboard/products' },
+    update: {},
+    create: {
+      name: 'Products',
+      href: '/dashboard/products',
+      icon: 'package',
+      order: 3,
+      isActive: true,
+    },
+  });
+
+  const ordersMenu = await prisma.menu.upsert({
+    where: { href: '/dashboard/orders' },
+    update: {},
+    create: {
+      name: 'Orders',
+      href: '/dashboard/orders',
+      icon: 'shopping-cart',
+      order: 4,
+      isActive: true,
+    },
+  });
+
+  const usersMenu = await prisma.menu.upsert({
+    where: { href: '/dashboard/users' },
+    update: {},
+    create: {
+      name: 'Users',
+      href: '/dashboard/users',
+      icon: 'user',
+      order: 5,
+      isActive: true,
+    },
+  });
+
+  const rolesMenu = await prisma.menu.upsert({
+    where: { href: '/dashboard/roles' },
+    update: {},
+    create: {
+      name: 'Roles',
+      href: '/dashboard/roles',
+      icon: 'shield',
+      order: 6,
+      isActive: true,
+    },
+  });
+
+  const settingsMenu = await prisma.menu.upsert({
+    where: { href: '/dashboard/settings' },
+    update: {},
+    create: {
+      name: 'Settings',
+      href: '/dashboard/settings',
+      icon: 'settings',
+      order: 7,
+      isActive: true,
+    },
+  });
+
+  const menusMenu = await prisma.menu.upsert({
+    where: { href: '/dashboard/menus' },
+    update: {},
+    create: {
+      name: 'Menus',
+      href: '/dashboard/menus',
+      icon: 'menu',
+      order: 8,
+      isActive: true,
+    },
+  });
+
+  const testAccessMenu = await prisma.menu.upsert({
+    where: { href: '/dashboard/test-access' },
+    update: {},
+    create: {
+      name: 'Test Access',
+      href: '/dashboard/test-access',
+      icon: 'test-tube',
+      order: 9,
+      isActive: true,
+    },
+  });
+
+  // Assign menus to roles
+  const superAdminMenus = [
+    dashboardMenu.id,
+    customersMenu.id,
+    productsMenu.id,
+    ordersMenu.id,
+    usersMenu.id,
+    rolesMenu.id,
+    settingsMenu.id,
+    menusMenu.id,
+    testAccessMenu.id,
+  ];
+
+  const adminMenus = [
+    dashboardMenu.id,
+    customersMenu.id,
+    productsMenu.id,
+    ordersMenu.id,
+    usersMenu.id,
+  ];
+
+  const userMenus = [
+    dashboardMenu.id,
+    customersMenu.id,
+    productsMenu.id,
+    ordersMenu.id,
+  ];
+
+  // Create role-menu relationships for superAdmin with full permissions
+  for (const menuId of superAdminMenus) {
+    await prisma.roleMenu.upsert({
+      where: {
+        roleId_menuId: {
+          roleId: superAdminRole.id,
+          menuId: menuId,
+        },
+      },
+      update: {
+        canAdd: true,
+        canRead: true,
+        canUpdate: true,
+        canDelete: true,
+      },
+      create: {
+        roleId: superAdminRole.id,
+        menuId: menuId,
+        canAdd: true,
+        canRead: true,
+        canUpdate: true,
+        canDelete: true,
+      },
+    });
+  }
+
+  // Create role-menu relationships for admin with limited permissions
+  for (const menuId of adminMenus) {
+    await prisma.roleMenu.upsert({
+      where: {
+        roleId_menuId: {
+          roleId: adminRole.id,
+          menuId: menuId,
+        },
+      },
+      update: {
+        canAdd: true,
+        canRead: true,
+        canUpdate: true,
+        canDelete: false, // admins can't delete
+      },
+      create: {
+        roleId: adminRole.id,
+        menuId: menuId,
+        canAdd: true,
+        canRead: true,
+        canUpdate: true,
+        canDelete: false,
+      },
+    });
+  }
+
+  // Create role-menu relationships for user with read-only permissions
+  for (const menuId of userMenus) {
+    await prisma.roleMenu.upsert({
+      where: {
+        roleId_menuId: {
+          roleId: userRole.id,
+          menuId: menuId,
+        },
+      },
+      update: {
+        canAdd: false,
+        canRead: true,
+        canUpdate: false,
+        canDelete: false,
+      },
+      create: {
+        roleId: userRole.id,
+        menuId: menuId,
+        canAdd: false,
+        canRead: true,
+        canUpdate: false,
+        canDelete: false,
+      },
+    });
+  }
 
   console.log('Seed data created successfully!');
 }

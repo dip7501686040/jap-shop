@@ -13,7 +13,15 @@ export class UserService extends BasePrismaService<User> {
     return this.prismaService.user.findUnique({
       where: { email },
       include: {
-        role: true, // Include role information if needed
+        role: {
+          include: {
+            roleMenus: {
+              include: {
+                menu: true,
+              },
+            },
+          },
+        },
       },
     });
   }
@@ -22,7 +30,15 @@ export class UserService extends BasePrismaService<User> {
     return this.prismaService.user.findUnique({
       where: { id },
       include: {
-        role: true, // Include role information
+        role: {
+          include: {
+            roleMenus: {
+              include: {
+                menu: true,
+              },
+            },
+          },
+        },
       },
     });
   }

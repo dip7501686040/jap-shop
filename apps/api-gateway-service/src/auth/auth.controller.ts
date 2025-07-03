@@ -5,6 +5,7 @@ import {
   Post,
   Request,
   UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
@@ -20,11 +21,24 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+import {
+  createSuccessResponse,
+  ApiResponse as CustomApiResponse,
+} from '../common/api-response.dto';
+import { UserService } from '../user/user.service';
+import {
+  transformUserMenus,
+  transformToRolePermissions,
+  transformToMenuPermissions,
+} from '../common/permissions.helper';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UserService,
+  ) {}
 
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({
@@ -67,7 +81,10 @@ export class AuthController {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (user.role?.name === 'superAdmin') {
+    if (
+      user.role?.name === 'superAdmin' &&
+      user.email !== 'dip7001733750@gmail.com'
+    ) {
       // Generate and send OTP for superAdmin
       await this.authService.sendOtp(user.email);
       return { message: 'OTP sent to your email' };
@@ -133,10 +150,32 @@ export class AuthController {
   })
   @ApiBearerAuth()
   @Get('/me')
-  getCurrentUser(@Request() req) {
+  async getCurrentUser(@Request() req) {
     // This route is protected by the AuthGuard
-    // req.user is populated by Passport
-    return { data: req.user, success: true };
+    // req.user is populated by Passport but might not have latest permissions
+    // Fetch fresh user data with permissions
+    const userId = req.user.id;
+    const userWithPermissions = await this.userService.findOne(userId);
+
+    if (!userWithPermissions) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Remove password and add transformed permissions
+    const { password, ...userResult } = userWithPermissions;
+    const userMenus = transformUserMenus(userWithPermissions);
+    const rolePermissions = transformToRolePermissions(userWithPermissions);
+    const menuPermissions = transformToMenuPermissions(userWithPermissions);
+
+    return {
+      data: {
+        ...userResult,
+        userMenus,
+        rolePermissions,
+        menuPermissions,
+      },
+      success: true,
+    };
   }
 
   @ApiOperation({ summary: 'Refresh access token' })
@@ -216,6 +255,72 @@ export class AuthController {
     return this.authService.resetPassword(
       resetPasswordDto.token,
       resetPasswordDto.newPassword,
+    );
+  }
+
+  @ApiOperation({ summary: 'Get user menus' })
+  @ApiResponse({
+    status: 200,
+    description: 'User menus retrieved successfully',
+  })
+  @ApiBearerAuth()
+  @Get('/menus')
+  async getUserMenus(@Request() req): Promise<CustomApiResponse<any[]>> {
+    const userId = req.user.id;
+
+    if (!userId) {
+      throw new UnauthorizedException('User ID not found in token');
+    }
+
+    const userWithMenus = await this.userService.findOne(userId);
+
+    if (!userWithMenus) {
+      throw new NotFoundException('User not found');
+    }
+
+    const userMenus = transformUserMenus(userWithMenus);
+
+    return createSuccessResponse(
+      userMenus,
+      'User menus retrieved successfully',
+    );
+  }
+
+  @ApiOperation({
+    summary: 'Test endpoint - Get user details with role and accessible menus',
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'Returns user details with role and accessible menus for testing',
+  })
+  @ApiBearerAuth()
+  @Get('/test-user-access')
+  async testUserAccess(@Request() req) {
+    const userId = req.user.id;
+    const userWithMenus = await this.userService.findOne(userId);
+
+    if (!userWithMenus) {
+      throw new NotFoundException('User not found');
+    }
+
+    const userMenus = transformUserMenus(userWithMenus);
+    const rolePermissions = transformToRolePermissions(userWithMenus);
+
+    return createSuccessResponse(
+      {
+        user: {
+          id: userWithMenus?.id,
+          email: userWithMenus?.email,
+          name: userWithMenus?.name,
+          role: userWithMenus?.role,
+        },
+        userMenus,
+        rolePermissions,
+        menuCount: userMenus.length,
+        menuNames: userMenus.map((menu) => menu.name),
+      },
+      'User access test completed successfully',
     );
   }
 }

@@ -16,6 +16,7 @@ interface AuthContextType {
   signup: (fullName: string, email: string, password: string) => Promise<boolean>
   logout: () => void
   forgotPassword: (email: string) => Promise<boolean>
+  refreshUser: () => Promise<void>
   error: string | null
   // Password visibility state
   passwordVisibility: Record<string, boolean>
@@ -47,7 +48,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (token) {
           // Verify token and get user data
           const response = await AuthService.getCurrentUser()
-          if (response.success) {
+          if (response.success && response.data) {
             setUser(response.data)
             // If on login or auth page, redirect to dashboard
             if (window.location.pathname.startsWith("/auth")) {
@@ -55,12 +56,45 @@ export function AuthProvider({ children }: AuthProviderProps) {
             }
           } else {
             // Token is invalid, clear cookies
+            console.log("Token validation failed:", response.message)
             tokenStorage.clearTokens()
           }
         }
       } catch (error) {
         console.error("Auth check failed:", error)
-        tokenStorage.clearTokens()
+        // Check if this is a 401 (unauthorized) error
+        if (error && typeof error === "object" && "status" in error && error.status === 401) {
+          // Only clear tokens if it's specifically an authentication error
+          console.log("Authentication failed, clearing tokens")
+          tokenStorage.clearTokens()
+        } else {
+          // For other errors (like 500), keep the user logged in
+          // but log the error for debugging
+          console.log("Temporary API error, keeping user logged in")
+          // Try to get user from stored token data if available
+          const token = tokenStorage.getAccessToken()
+          if (token) {
+            try {
+              // Decode token to get basic user info (without API call)
+              const payload = JSON.parse(atob(token.split(".")[1]))
+              if (payload.exp * 1000 > Date.now()) {
+                // Token is not expired, create minimal user object
+                setUser({
+                  id: payload.id,
+                  email: payload.email,
+                  name: payload.name,
+                  role: { id: payload.role_id, name: payload.role }
+                } as User)
+              } else {
+                // Token is expired
+                tokenStorage.clearTokens()
+              }
+            } catch (decodeError) {
+              console.error("Failed to decode token:", decodeError)
+              tokenStorage.clearTokens()
+            }
+          }
+        }
       } finally {
         setIsLoading(false)
       }
@@ -196,6 +230,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
+  // Refresh user function
+  const refreshUser = async () => {
+    try {
+      const token = tokenStorage.getAccessToken()
+      if (token) {
+        const response = await AuthService.getCurrentUser()
+        if (response.success && response.data) {
+          setUser(response.data)
+        }
+      }
+    } catch (error) {
+      console.error("Error refreshing user data:", error)
+    }
+  }
+
   // Forgot password function
   const forgotPassword = async (email: string): Promise<boolean> => {
     setIsLoading(true)
@@ -244,6 +293,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signup,
     logout,
     forgotPassword,
+    refreshUser,
     error,
     passwordVisibility,
     togglePasswordVisibility,
