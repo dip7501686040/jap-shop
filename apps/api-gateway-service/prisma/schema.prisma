@@ -26,31 +26,75 @@ model Role {
 }
 
 model User {
-  id                   String    @id @default(cuid())
-  email                String    @unique
+  id                   String        @id @default(cuid())
+  email                String        @unique
   password             String
   name                 String
   roleId               String?
-  role                 Role?     @relation(fields: [roleId], references: [id])
+  role                 Role?         @relation(fields: [roleId], references: [id])
   passwordResetToken   String?
   passwordResetExpires DateTime?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  userLogbooks         UserLogbook[]
 
   @@map("users")
 }
 
 model Customer {
+  id               String            @id @default(cuid())
+  name             String
+  email            String?
+  phone            String?
+  address          String?
+  entries          Entry[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  logbookCustomers LogbookCustomer[]
+
+  @@map("customers")
+}
+
+model Logbook {
+  id               String            @id @default(cuid())
+  name             String
+  description      String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  userLogbooks     UserLogbook[]
+  logbookCustomers LogbookCustomer[]
+
+  @@map("logbooks")
+}
+
+model UserLogbook {
   id        String   @id @default(cuid())
-  name      String
-  email     String?
-  phone     String?
-  address   String?
-  entries   Entry[]
+  userId    String
+  logbookId String
+  canAdd    Boolean  @default(false)
+  canRead   Boolean  @default(true)
+  canUpdate Boolean  @default(false)
+  canDelete Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logbook   Logbook  @relation(fields: [logbookId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("customers")
+  @@unique([userId, logbookId])
+  @@map("user_logbooks")
+}
+
+model LogbookCustomer {
+  id         String   @id @default(cuid())
+  logbookId  String
+  customerId String
+  logbook    Logbook  @relation(fields: [logbookId], references: [id], onDelete: Cascade)
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([logbookId, customerId])
+  @@map("logbook_customers")
 }
 
 model Entry {

@@ -25,12 +25,12 @@ api.interceptors.request.use(
 
     // Log request in development
     if (process.env.NODE_ENV === "development") {
-      console.log("🚀 Request:", {
-        method: config.method?.toUpperCase(),
-        url: config.url,
-        baseURL: config.baseURL,
-        headers: config.headers
-      })
+      // console.log("🚀 Request:", {
+      //   method: config.method?.toUpperCase(),
+      //   url: config.url,
+      //   baseURL: config.baseURL,
+      //   headers: config.headers
+      // })
     }
 
     return config
@@ -44,17 +44,17 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response: AxiosResponse) => {
-    // Calculate request duration
-    const duration = response.config.metadata?.startTime ? new Date().getTime() - response.config.metadata.startTime.getTime() : 0
+    // Calculate request duration (currently unused)
+    // const duration = response.config.metadata?.startTime ? new Date().getTime() - response.config.metadata.startTime.getTime() : 0
 
     // Log response in development
     if (process.env.NODE_ENV === "development") {
-      console.log("✅ Response:", {
-        status: response.status,
-        url: response.config.url,
-        duration: `${duration}ms`,
-        data: response.data
-      })
+      // console.log("✅ Response:", {
+      //   status: response.status,
+      //   url: response.config.url,
+      //   duration: `${duration}ms`,
+      //   data: response.data
+      // })
     }
 
     return response

@@ -7,10 +7,85 @@ export interface ApiResponse<T> {
   success: boolean
 }
 
+export interface PaginatedResponse<T> {
+  success: boolean
+  data: T[]
+  pagination: {
+    total: number
+    page: number
+    limit: number
+    totalPages: number
+  }
+}
+
 export interface Role {
   id: string
   name: string
   description?: string
+}
+
+export interface Logbook {
+  id: string
+  name: string
+  description?: string
+  userLogbooks?: UserLogbook[]
+  logbookCustomers?: LogbookCustomer[]
+  _count?: {
+    userLogbooks: number
+    logbookCustomers: number
+  }
+  createdAt: string
+  updatedAt: string
+}
+
+export interface UserLogbook {
+  id: string
+  userId: string
+  logbookId: string
+  canAdd: boolean
+  canRead: boolean
+  canUpdate: boolean
+  canDelete: boolean
+  user: {
+    id: string
+    name: string
+    email: string
+  }
+  logbook?: Logbook
+  createdAt: string
+  updatedAt: string
+}
+
+export interface LogbookCustomer {
+  id: string
+  logbookId: string
+  customerId: string
+  logbook?: Logbook
+  customer: Customer
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateLogbookRequest {
+  name: string
+  description?: string
+}
+
+export interface UpdateLogbookRequest {
+  name?: string
+  description?: string
+}
+
+export interface LogbookPermissionRequest {
+  userId: string
+  canAdd: boolean
+  canRead: boolean
+  canUpdate: boolean
+  canDelete: boolean
+}
+
+export interface AddCustomerToLogbookRequest {
+  customerId: string
 }
 
 export interface User {
@@ -213,7 +288,7 @@ export class AuthService {
 
   static async resendOtp(email: string): Promise<ApiResponse<OtpResponse>> {
     // For resending OTP, we can call the login endpoint again with the same credentials
-    // This will trigger OTP generation again for superAdmin users
+    // This will trigger OTP generation again for SuperAdmin users
     const response = await apiClient.post<ApiResponse<OtpResponse>>(`${this.BASE_PATH}/resend-otp`, { email })
     return response.data
   }
@@ -333,6 +408,17 @@ export class CustomerService {
 
   static async getSummary(): Promise<ApiResponse<{ totalDebits: number; totalCredits: number }>> {
     const response = await apiClient.get<ApiResponse<{ totalDebits: number; totalCredits: number }>>(`${this.BASE_PATH}/summary`)
+    return response.data
+  }
+
+  // Logbook-aware customer methods
+  static async getCustomersByLogbook(logbookId: string): Promise<ApiResponse<Customer[]>> {
+    const response = await apiClient.get<ApiResponse<Customer[]>>(`/logbooks/${logbookId}/customers`)
+    return response.data
+  }
+
+  static async getSummaryByLogbook(logbookId: string): Promise<ApiResponse<{ totalDebits: number; totalCredits: number }>> {
+    const response = await apiClient.get<ApiResponse<{ totalDebits: number; totalCredits: number }>>(`/logbooks/${logbookId}/customers/summary`)
     return response.data
   }
 }
@@ -469,4 +555,86 @@ export const resetPassword = async (token: string, newPassword: string): Promise
     newPassword
   })
   return response.data
+}
+
+// Logbook API service
+export class LogbookService {
+  private static readonly BASE_PATH = "/logbooks"
+
+  static async getAllLogbooks(page: number = 1, limit: number = 10, search?: string): Promise<PaginatedResponse<Logbook>> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString()
+    })
+    if (search) {
+      params.append("search", search)
+    }
+    const response = await apiClient.get<PaginatedResponse<Logbook>>(`${this.BASE_PATH}?${params}`)
+    return response.data
+  }
+
+  static async getLogbookById(id: string): Promise<ApiResponse<Logbook>> {
+    const response = await apiClient.get<ApiResponse<Logbook>>(`${this.BASE_PATH}/${id}`)
+    return response.data
+  }
+
+  static async createLogbook(data: CreateLogbookRequest): Promise<ApiResponse<Logbook>> {
+    const response = await apiClient.post<ApiResponse<Logbook>>(this.BASE_PATH, data)
+    return response.data
+  }
+
+  static async updateLogbook(id: string, data: UpdateLogbookRequest): Promise<ApiResponse<Logbook>> {
+    const response = await apiClient.patch<ApiResponse<Logbook>>(`${this.BASE_PATH}/${id}`, data)
+    return response.data
+  }
+
+  static async deleteLogbook(id: string): Promise<ApiResponse<null>> {
+    const response = await apiClient.delete<ApiResponse<null>>(`${this.BASE_PATH}/${id}`)
+    return response.data
+  }
+
+  // Permission management
+  static async setUserPermissions(logbookId: string, data: LogbookPermissionRequest): Promise<ApiResponse<UserLogbook>> {
+    const response = await apiClient.post<ApiResponse<UserLogbook>>(`${this.BASE_PATH}/${logbookId}/permissions`, data)
+    return response.data
+  }
+
+  static async getUserPermissions(logbookId: string, userId: string): Promise<ApiResponse<{ canAdd: boolean; canRead: boolean; canUpdate: boolean; canDelete: boolean }>> {
+    const response = await apiClient.get<ApiResponse<{ canAdd: boolean; canRead: boolean; canUpdate: boolean; canDelete: boolean }>>(`${this.BASE_PATH}/${logbookId}/permissions/${userId}`)
+    return response.data
+  }
+
+  static async removeUserPermissions(logbookId: string, userId: string): Promise<ApiResponse<null>> {
+    const response = await apiClient.delete<ApiResponse<null>>(`${this.BASE_PATH}/${logbookId}/permissions/${userId}`)
+    return response.data
+  }
+
+  // Customer management
+  static async getLogbookCustomers(logbookId: string, page: number = 1, limit: number = 10, search?: string): Promise<PaginatedResponse<LogbookCustomer>> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString()
+    })
+    if (search) {
+      params.append("search", search)
+    }
+    const response = await apiClient.get<PaginatedResponse<LogbookCustomer>>(`${this.BASE_PATH}/${logbookId}/customers?${params}`)
+    return response.data
+  }
+
+  static async addCustomerToLogbook(logbookId: string, data: AddCustomerToLogbookRequest): Promise<ApiResponse<LogbookCustomer>> {
+    const response = await apiClient.post<ApiResponse<LogbookCustomer>>(`${this.BASE_PATH}/${logbookId}/customers`, data)
+    return response.data
+  }
+
+  static async removeCustomerFromLogbook(logbookId: string, customerId: string): Promise<ApiResponse<null>> {
+    const response = await apiClient.delete<ApiResponse<null>>(`${this.BASE_PATH}/${logbookId}/customers/${customerId}`)
+    return response.data
+  }
+
+  // Set default logbook for current user
+  static async setDefaultLogbook(logbookId: string): Promise<ApiResponse<null>> {
+    const response = await apiClient.post<ApiResponse<null>>(`${this.BASE_PATH}/${logbookId}/set-default`, {})
+    return response.data
+  }
 }

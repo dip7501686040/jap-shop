@@ -9,6 +9,7 @@ import { RoleModule } from './role/role.module';
 import { CustomerModule } from './customer/customer.module';
 import { EntryModule } from './entry/entry.module';
 import { MenuModule } from './menu/menu.module';
+import { LogbookModule } from './logbook/logbook.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { MenuModule } from './menu/menu.module';
     CustomerModule,
     EntryModule,
     MenuModule,
+    LogbookModule,
   ],
   controllers: [AppController],
   providers: [AppService],

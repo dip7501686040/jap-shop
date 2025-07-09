@@ -1,11 +1,13 @@
 "use client"
 import React, { useState, useEffect } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import CustomerListSection from "../../components/CustomerListSection"
 import CustomerDetailsSection from "../../components/CustomerDetailsSection"
 import EditCustomerDrawer from "../../components/EditCustomerDrawer"
-import { CustomerService, Customer, CreateCustomerRequest, UpdateCustomerRequest, EntryService, CreateEntryRequest } from "../../../lib/api-services"
+import { CustomerService, Customer, CreateCustomerRequest, UpdateCustomerRequest, EntryService, CreateEntryRequest, LogbookService } from "../../../lib/api-services"
 import { Customer as ComponentCustomer } from "../../components/CustomerListSection"
 import { ProtectedRoute } from "@/app/components/ProtectedRoute"
+import { useLogbook } from "@/app/context/logbook-context"
 
 // Component Entry interface
 interface ComponentEntry {
@@ -18,6 +20,15 @@ interface ComponentEntry {
 
 // Customers
 function CustomersContent() {
+  const { selectedLogbook, defaultLogbook, fetchLogbooks } = useLogbook()
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const customerIdFromUrl = searchParams.get("customerId")
+  const logbookIdFromUrl = searchParams.get("logbookId")
+
+  // Get the logbook to use for queries (selected or default)
+  const currentLogbook = selectedLogbook || defaultLogbook
+
   // State management
   const [customers, setCustomers] = useState<ComponentCustomer[]>([])
   const [loading, setLoading] = useState(true)
@@ -74,13 +85,23 @@ function CustomersContent() {
     try {
       setLoading(true)
       setError(null)
-      const response = await CustomerService.getCustomers()
+
+      // If no logbook is selected and no default logbook, fetch logbooks first
+      if (!currentLogbook) {
+        console.warn("No logbook available for fetching customers")
+        await fetchLogbooks()
+        return []
+      }
+
+      const response = await LogbookService.getLogbookCustomers(currentLogbook.id, 1, 100)
       if (response.success) {
-        const formattedCustomers = formatCustomersForComponent(response.data)
+        // Transform LogbookCustomer[] to Customer[] for compatibility
+        const customersData = response.data.map((lc) => lc.customer)
+        const formattedCustomers = formatCustomersForComponent(customersData)
         setCustomers(formattedCustomers)
         return formattedCustomers
       } else {
-        setError(response.message || "Failed to fetch customers")
+        setError("Failed to fetch customers")
         return []
       }
     } catch (err) {
@@ -94,8 +115,16 @@ function CustomersContent() {
 
   const createCustomer = async (customerData: CreateCustomerRequest, openingBalance?: { amount: number; type: "GAVE" | "GOT" }) => {
     try {
+      if (!currentLogbook) {
+        throw new Error("No logbook selected")
+      }
+
+      // First create the customer
       const response = await CustomerService.createCustomer(customerData)
       if (response.success) {
+        // Add the customer to the current logbook
+        await LogbookService.addCustomerToLogbook(currentLogbook.id, { customerId: response.data.id })
+
         // If there's an opening balance, create an entry for it
         if (openingBalance && openingBalance.amount > 0) {
           const entryData: CreateEntryRequest = {
@@ -134,24 +163,34 @@ function CustomersContent() {
 
   const deleteCustomer = async (id: string) => {
     try {
-      const response = await CustomerService.deleteCustomer(id)
+      if (!currentLogbook) {
+        throw new Error("No logbook selected")
+      }
+
+      // Remove customer from the current logbook instead of deleting the customer entirely
+      const response = await LogbookService.removeCustomerFromLogbook(currentLogbook.id, id)
       if (response.success) {
-        await fetchSummary() // Refresh summary after deleting customer
+        await fetchSummary() // Refresh summary after removing customer from logbook
         await fetchCustomers() // Refresh the list
         if (selectedCustomer?.id === id) {
-          setSelectedCustomer(null) // Clear selection if deleted customer was selected
+          setSelectedCustomer(null) // Clear selection if removed customer was selected
         }
       } else {
-        throw new Error(response.message || "Failed to delete customer")
+        throw new Error(response.message || "Failed to remove customer from logbook")
       }
     } catch (err) {
-      console.error("Error deleting customer:", err)
+      console.error("Error removing customer from logbook:", err)
       throw err
     }
   }
 
   // Helper function to refresh data and update selected customer
   const refreshDataAndSelectedCustomer = async () => {
+    if (!currentLogbook) {
+      console.warn("No logbook available for refreshing data")
+      return
+    }
+
     await fetchSummary() // Refresh summary data to update header
     const updatedCustomers = await fetchCustomers()
     if (selectedCustomer && updatedCustomers.length > 0) {
@@ -220,15 +259,22 @@ function CustomersContent() {
     setShowEditCustomer(true)
   }
 
-  // Load customers on component mount
+  // Load customers on component mount and when currentLogbook changes
   useEffect(() => {
-    fetchCustomers()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    if (currentLogbook) {
+      fetchCustomers()
+    }
+  }, [currentLogbook]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch summary from API
   const fetchSummary = async () => {
     try {
-      const response = await CustomerService.getSummary()
+      if (!currentLogbook) {
+        console.warn("No logbook available for fetching summary")
+        return
+      }
+
+      const response = await CustomerService.getSummaryByLogbook(currentLogbook.id)
       if (response.success) {
         setTotalDebits(response.data.totalDebits)
         setTotalCredits(response.data.totalCredits)
@@ -239,16 +285,50 @@ function CustomersContent() {
   }
 
   useEffect(() => {
-    fetchSummary()
-  }, [])
+    if (currentLogbook) {
+      fetchSummary()
+    }
+  }, [currentLogbook, fetchSummary])
 
   // Responsive check
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768
+
+  // Select customer from URL parameter if available
+  useEffect(() => {
+    if (customerIdFromUrl && customers.length > 0) {
+      const customer = customers.find((c) => c.id === customerIdFromUrl)
+      if (customer) {
+        setSelectedCustomer(customer)
+      }
+    }
+  }, [customerIdFromUrl, customers])
+
+  // Update URL to include logbook ID if not present
+  useEffect(() => {
+    if (currentLogbook && !logbookIdFromUrl) {
+      // If we have a current logbook but no logbook ID in URL, update the URL
+      const newSearchParams = new URLSearchParams(searchParams)
+      newSearchParams.set("logbookId", currentLogbook.id)
+      if (customerIdFromUrl) {
+        newSearchParams.set("customerId", customerIdFromUrl)
+      }
+      router.replace(`/dashboard/customers?${newSearchParams.toString()}`)
+    }
+  }, [currentLogbook, logbookIdFromUrl, customerIdFromUrl, searchParams, router])
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-lg">Loading customers...</div>
+      </div>
+    )
+  }
+
+  if (!currentLogbook) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <div className="text-lg mb-4">No logbook available</div>
+        <div className="text-gray-600 text-center">Please select a logbook from the sidebar or contact your administrator to set up logbooks.</div>
       </div>
     )
   }
@@ -265,43 +345,52 @@ function CustomersContent() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen h-full overflow-hidden">
-      <CustomerListSection
-        debits={totalDebits}
-        credits={totalCredits}
-        customers={customers}
-        selectedCustomer={selectedCustomer}
-        onSelectCustomer={handleSelectCustomer}
-        onCreateCustomer={createCustomer}
-        onUpdateCustomer={updateCustomer}
-        onDeleteCustomer={deleteCustomer}
-      />
-      <CustomerDetailsSection
-        selectedCustomer={selectedCustomer}
-        entries={entries}
-        selectedEntry={selectedEntry}
-        setSelectedEntry={setSelectedEntry}
-        showCalculator={showCalculator}
-        setShowCalculator={setShowCalculator}
-        calcValue={calcValue}
-        setCalcValue={setCalcValue}
-        onBack={() => setSelectedCustomer(null)}
-        isMobile={isMobile}
-        onEditCustomer={handleEditCustomer}
-        onDeleteCustomer={deleteCustomer}
-        onSaveEntry={createEntry}
-        onDeleteEntry={deleteEntry}
-      />
-      <EditCustomerDrawer
-        show={showEditCustomer}
-        onClose={() => {
-          setShowEditCustomer(false)
-          setCustomerToEdit(null)
-        }}
-        customer={customerToEdit}
-        onUpdateCustomer={updateCustomer}
-        onDeleteCustomer={deleteCustomer}
-      />
+    <div className="flex flex-col h-full">
+      {/* Logbook Header */}
+      <div className="bg-gray-50 border-b px-6 py-4">
+        <h1 className="text-xl font-semibold text-gray-900">Customers - {currentLogbook.name}</h1>
+        {currentLogbook.description && <p className="text-sm text-gray-600 mt-1">{currentLogbook.description}</p>}
+      </div>
+
+      {/* Main Content */}
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+        <CustomerListSection
+          debits={totalDebits}
+          credits={totalCredits}
+          customers={customers}
+          selectedCustomer={selectedCustomer}
+          onSelectCustomer={handleSelectCustomer}
+          onCreateCustomer={createCustomer}
+          onUpdateCustomer={updateCustomer}
+          onDeleteCustomer={deleteCustomer}
+        />
+        <CustomerDetailsSection
+          selectedCustomer={selectedCustomer}
+          entries={entries}
+          selectedEntry={selectedEntry}
+          setSelectedEntry={setSelectedEntry}
+          showCalculator={showCalculator}
+          setShowCalculator={setShowCalculator}
+          calcValue={calcValue}
+          setCalcValue={setCalcValue}
+          onBack={() => setSelectedCustomer(null)}
+          isMobile={isMobile}
+          onEditCustomer={handleEditCustomer}
+          onDeleteCustomer={deleteCustomer}
+          onSaveEntry={createEntry}
+          onDeleteEntry={deleteEntry}
+        />
+        <EditCustomerDrawer
+          show={showEditCustomer}
+          onClose={() => {
+            setShowEditCustomer(false)
+            setCustomerToEdit(null)
+          }}
+          customer={customerToEdit}
+          onUpdateCustomer={updateCustomer}
+          onDeleteCustomer={deleteCustomer}
+        />
+      </div>
     </div>
   )
 }

@@ -140,7 +140,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     checkAuth()
-  }, [router])
+  }, [router, setUserAndMenus])
 
   // Login function
   const login = async (email: string, password: string): Promise<boolean | "otp_required"> => {
@@ -150,7 +150,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const loginData: LoginRequest = { email, password }
       const response = await AuthService.login(loginData)
 
-      // Check if this is an OTP response (for superAdmin)
+      // Check if this is an OTP response (for SuperAdmin)
       if (response.message === "OTP sent to your email" || (response.data && typeof response.data === "object" && "message" in response.data && response.data.message === "OTP sent to your email")) {
         return "otp_required"
       }

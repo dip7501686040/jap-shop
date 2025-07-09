@@ -194,7 +194,7 @@ export default function TestUserAccessPage() {
         <h3 className="font-medium text-blue-800 mb-2">Test Instructions</h3>
         <div className="text-sm text-blue-700 space-y-1">
           <p>
-            1. <strong>Test with Different Roles:</strong> Login with users having different roles (superAdmin, admin, user) to verify menu access.
+            1. <strong>Test with Different Roles:</strong> Login with users having different roles (SuperAdmin, admin, user) to verify menu access.
           </p>
           <p>
             2. <strong>Verify Menu Filtering:</strong> Each role should only see menus assigned to their role.
