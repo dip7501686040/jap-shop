@@ -42,7 +42,7 @@ export default function EntryDetailsModal({
 
   if (!open) return null
   return (
-    <div className={`${containerMode ? "absolute" : "fixed"} inset-0 z-[110] flex flex-col bg-black bg-opacity-95`}>
+    <div className={`${containerMode ? "absolute" : "fixed"} inset-0 z-[110] flex flex-col bg-black/95`}>
       {/* Header */}
       <div className="flex items-center px-4 py-5 bg-black">
         <button className="mr-2 text-white" onClick={onClose}>

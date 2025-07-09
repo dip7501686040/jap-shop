@@ -62,7 +62,7 @@ export default function CalculatorDialog({
 
   if (!open) return null
   return (
-    <div className={`${containerMode ? "absolute" : "fixed"} inset-0 z-[100] flex items-end md:items-center justify-center bg-black bg-opacity-80 transition-all`}>
+    <div className={`${containerMode ? "absolute" : "fixed"} inset-0 z-[100] flex items-end md:items-center justify-center bg-black/80 transition-all`}>
       <div className="w-full max-w-md mx-auto bg-[#18181a] rounded-t-2xl md:rounded-2xl shadow-lg overflow-hidden animate-slideup relative flex flex-col h-[100dvh] md:h-[80dvh]">
         {/* Header */}
         <div className="flex items-center px-4 pt-6 pb-4 bg-black sticky top-0 z-10">

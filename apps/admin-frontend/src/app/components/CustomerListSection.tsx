@@ -26,6 +26,7 @@ interface CustomerListSectionProps {
   credits: number
   customers: Customer[]
   selectedCustomer: Customer | null
+  currentLogbook: { id: string; name: string; description?: string }
   onSelectCustomer: (customer: Customer) => void
   onCreateCustomer?: (customerData: CreateCustomerRequest, openingBalance?: { amount: number; type: "GAVE" | "GOT" }) => Promise<ApiCustomer>
   onUpdateCustomer?: (id: string, customerData: UpdateCustomerRequest) => Promise<ApiCustomer>
@@ -37,6 +38,7 @@ const CustomerListSection: React.FC<CustomerListSectionProps> = ({
   credits,
   customers,
   selectedCustomer,
+  currentLogbook,
   onSelectCustomer,
   onCreateCustomer,
   onUpdateCustomer: _onUpdateCustomer, // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -46,6 +48,11 @@ const CustomerListSection: React.FC<CustomerListSectionProps> = ({
 
   return (
     <div className="w-full md:w-1/2 p-0 flex flex-col">
+      {/* Logbook Header */}
+      <div className="bg-gray-50 border-b px-6 py-4">
+        <h1 className="text-xl font-semibold text-gray-900">Customers - {currentLogbook.name}</h1>
+        {currentLogbook.description && <p className="text-sm text-gray-600 mt-1">{currentLogbook.description}</p>}
+      </div>
       <CustomerListHeader debits={debits} credits={credits} selectedCustomer={selectedCustomer} />
       <CustomerListFilterBar selectedCustomer={selectedCustomer} />
       <div className="flex-1 min-h-0 p-4 md:p-6 h-full overflow-hidden">

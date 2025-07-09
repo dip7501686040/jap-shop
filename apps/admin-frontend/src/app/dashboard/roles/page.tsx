@@ -239,13 +239,13 @@ export default function RolesPage() {
                       {role.description && <p className="text-sm opacity-75 mt-1">{role.description}</p>}
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => handleEdit(role)} className="p-2 hover:bg-white hover:bg-opacity-20 rounded" title="Edit">
+                      <button onClick={() => handleEdit(role)} className="p-2 hover:bg-white/20 rounded" title="Edit">
                         <Edit className="h-4 w-4" />
                       </button>
-                      <button onClick={() => handleManageMenus(role)} className="p-2 hover:bg-white hover:bg-opacity-20 rounded" title="Manage Menus">
+                      <button onClick={() => handleManageMenus(role)} className="p-2 hover:bg-white/20 rounded" title="Manage Menus">
                         <Settings className="h-4 w-4" />
                       </button>
-                      <button onClick={() => setDeleteRole(role)} className="p-2 hover:bg-white hover:bg-opacity-20 rounded text-red-600" title="Delete">
+                      <button onClick={() => setDeleteRole(role)} className="p-2 hover:bg-white/20 rounded text-red-600" title="Delete">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -258,7 +258,7 @@ export default function RolesPage() {
 
         {/* Create Role Modal */}
         {createRole && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md">
               <h2 className="text-lg font-semibold mb-4">Create Role</h2>
               <div className="space-y-4">
@@ -303,7 +303,7 @@ export default function RolesPage() {
 
         {/* Edit Role Modal */}
         {editRole && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md">
               <h2 className="text-lg font-semibold mb-4">Edit Role</h2>
               <div className="space-y-4">
@@ -340,7 +340,7 @@ export default function RolesPage() {
 
         {/* Delete Role Modal */}
         {deleteRole && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-sm">
               <h2 className="text-lg font-semibold mb-4">Delete Role</h2>
               <p className="text-sm text-gray-600 mb-6">Are you sure you want to delete the role &quot;{deleteRole.name}&quot;? This action cannot be undone.</p>
@@ -358,7 +358,7 @@ export default function RolesPage() {
 
         {/* Manage Menus Modal */}
         {manageMenusRole && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
               <h2 className="text-lg font-semibold mb-4">Manage Menus for {manageMenusRole.name}</h2>
               <div className="space-y-4">

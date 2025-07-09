@@ -281,12 +281,10 @@ function CustomersContent() {
   useEffect(() => {
     if (currentLogbook) {
       fetchCustomers()
-    }
-  }, [currentLogbook]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (currentLogbook) {
       fetchSummary()
+      setSelectedCustomer(null) // Reset selected customer when logbook changes
+      setSelectedEntry(null) // Reset selected entry when logbook changes
+      setShowCalculator(null) // Reset calculator state when logbook changes
     }
   }, [currentLogbook]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -346,12 +344,6 @@ function CustomersContent() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Logbook Header */}
-      <div className="bg-gray-50 border-b px-6 py-4">
-        <h1 className="text-xl font-semibold text-gray-900">Customers - {currentLogbook.name}</h1>
-        {currentLogbook.description && <p className="text-sm text-gray-600 mt-1">{currentLogbook.description}</p>}
-      </div>
-
       {/* Main Content */}
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         <CustomerListSection
@@ -359,6 +351,7 @@ function CustomersContent() {
           credits={totalCredits}
           customers={customers}
           selectedCustomer={selectedCustomer}
+          currentLogbook={currentLogbook}
           onSelectCustomer={handleSelectCustomer}
           onCreateCustomer={createCustomer}
           onUpdateCustomer={updateCustomer}

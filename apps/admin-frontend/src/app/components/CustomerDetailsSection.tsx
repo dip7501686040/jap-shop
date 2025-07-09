@@ -276,7 +276,7 @@ const CustomerDetailsSection: React.FC<CustomerDetailsSectionProps> = ({
 
       {/* Entry Details Modal - Desktop */}
       {selectedEntry && (
-        <div className="absolute inset-0 z-50 flex flex-col bg-black bg-opacity-60">
+        <div className="absolute inset-0 z-50 flex flex-col bg-black/60">
           <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
             <div className="w-full">
               <EntryDetailsModal
@@ -301,7 +301,7 @@ const CustomerDetailsSection: React.FC<CustomerDetailsSectionProps> = ({
 
       {/* Calculator Dialog - Desktop */}
       {showCalculator && (
-        <div className="absolute inset-0 z-50 flex flex-col bg-black bg-opacity-60">
+        <div className="absolute inset-0 z-50 flex flex-col bg-black/60">
           <div className="w-full max-w-md mx-auto h-full flex items-center justify-center">
             <div className="w-full">
               <CalculatorDialog
