@@ -259,13 +259,6 @@ function CustomersContent() {
     setShowEditCustomer(true)
   }
 
-  // Load customers on component mount and when currentLogbook changes
-  useEffect(() => {
-    if (currentLogbook) {
-      fetchCustomers()
-    }
-  }, [currentLogbook]) // eslint-disable-line react-hooks/exhaustive-deps
-
   // Fetch summary from API
   const fetchSummary = async () => {
     try {
@@ -284,11 +277,18 @@ function CustomersContent() {
     }
   }
 
+  // Load customers on component mount and when currentLogbook changes
+  useEffect(() => {
+    if (currentLogbook) {
+      fetchCustomers()
+    }
+  }, [currentLogbook]) // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (currentLogbook) {
       fetchSummary()
     }
-  }, [currentLogbook, fetchSummary])
+  }, [currentLogbook]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Responsive check
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768

@@ -23,7 +23,7 @@ export default function Sidebar({ setSidebarOpen }: SidebarProps) {
 
   useEffect(() => {
     fetchLogbooks()
-  }, [fetchLogbooks])
+  }, [])
 
   // Check if current page is related to logbooks and expand accordingly
   useEffect(() => {
@@ -36,7 +36,7 @@ export default function Sidebar({ setSidebarOpen }: SidebarProps) {
         setSelectedLogbook(currentLogbook)
       }
     }
-  }, [pathname, searchParams, logbooks, selectedLogbook, setSelectedLogbook])
+  }, [pathname, searchParams, logbooks])
 
   // Helper function to check if a logbook is currently selected based on URL
   const isLogbookSelected = (logbookId: string) => {

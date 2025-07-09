@@ -34,7 +34,7 @@ export default function LogbookManagementPage() {
     if (isSuperAdmin) {
       fetchUsers()
     }
-  }, [isSuperAdmin, fetchLogbooks])
+  }, [isSuperAdmin])
 
   const fetchUsers = async () => {
     try {
