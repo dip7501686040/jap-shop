@@ -19,6 +19,5 @@ export class CreateUserDto {
   name: string;
 
   @ApiProperty({ description: 'User role ID', example: 'id' })
-  @IsString()
-  roleId: string;
+  roleId?: string;
 }
