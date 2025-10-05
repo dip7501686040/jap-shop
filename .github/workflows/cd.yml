@@ -1,63 +1,63 @@
-name: Kubernetes Deploy
+# name: Kubernetes Deploy
 
-on:
-  workflow_dispatch:
-  workflow_run:
-    workflows: ["Docker CI"]
-    types:
-      - completed
-    branches:
-      - dev
+# on:
+#   workflow_dispatch:
+#   workflow_run:
+#     workflows: ["Docker CI"]
+#     types:
+#       - completed
+#     branches:
+#       - dev
 
-jobs:
-  deploy:
-    name: Deploy to Kubernetes
-    runs-on: self-hosted
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+# jobs:
+#   deploy:
+#     name: Deploy to Kubernetes
+#     runs-on: self-hosted
+#     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 
-    steps:
-      - name: Download workflow artifact
-        if: ${{ github.event_name == 'workflow_run' }}
-        uses: actions/download-artifact@v4
-        with:
-          name: affected-apps
-          path: ../../../../artifacts
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+#     steps:
+#       - name: Download workflow artifact
+#         if: ${{ github.event_name == 'workflow_run' }}
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: affected-apps
+#           path: ../../../../artifacts
+#           run-id: ${{ github.event.workflow_run.id }}
+#           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check downloaded file
-        run: |
-          cat ../../../../artifacts/affected-apps.json
+#       - name: Check downloaded file
+#         run: |
+#           cat ../../../../artifacts/affected-apps.json
 
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          sparse-checkout: k8s
-          sparse-checkout-cone-mode: false
+#       - name: Checkout repository
+#         uses: actions/checkout@v3
+#         with:
+#           sparse-checkout: k8s
+#           sparse-checkout-cone-mode: false
 
-      - name: Deploy affected apps to Kubernetes
-        run: |
-          # Get the short commit ID
-          COMMIT_ID=$(git rev-parse --short ${{ github.sha }})
-          echo "Using commit ID: $COMMIT_ID"
+#       - name: Deploy affected apps to Kubernetes
+#         run: |
+#           # Get the short commit ID
+#           COMMIT_ID=$(git rev-parse --short ${{ github.sha }})
+#           echo "Using commit ID: $COMMIT_ID"
 
-          if [ "${{ github.event_name }}" == "workflow_run" ]; then
-            echo "Reading affected apps from artifact..."
-            cat ../../../../artifacts/affected-apps.json
-            AFFECTED=$(cat ../../../../artifacts/affected-apps.json)
-          else
-            echo "Manual trigger: deploying all apps"
-            AFFECTED=$(find k8s/* -type d -maxdepth 0 | xargs -n1 basename | jq -R -s -c 'split("\n") | map(select(length > 0))')
-          fi
+#           if [ "${{ github.event_name }}" == "workflow_run" ]; then
+#             echo "Reading affected apps from artifact..."
+#             cat ../../../../artifacts/affected-apps.json
+#             AFFECTED=$(cat ../../../../artifacts/affected-apps.json)
+#           else
+#             echo "Manual trigger: deploying all apps"
+#             AFFECTED=$(find k8s/* -type d -maxdepth 0 | xargs -n1 basename | jq -R -s -c 'split("\n") | map(select(length > 0))')
+#           fi
 
-          echo "Deploying apps: $AFFECTED"
-          for app_name in $(echo "$AFFECTED" | jq -r '.[]'); do
-            echo "Deploying $app_name with image tag $COMMIT_ID"
-            # Export COMMIT_ID for envsubst to use
-            export COMMIT_ID
-            # Substitute image tag into template and apply
-            envsubst < k8s/$app_name/deployment.yml | kubectl apply -f -
-            kubectl apply -f k8s/$app_name/service.yml
-            kubectl apply -f k8s/$app_name/ingress.yml
-          done
+#           echo "Deploying apps: $AFFECTED"
+#           for app_name in $(echo "$AFFECTED" | jq -r '.[]'); do
+#             echo "Deploying $app_name with image tag $COMMIT_ID"
+#             # Export COMMIT_ID for envsubst to use
+#             export COMMIT_ID
+#             # Substitute image tag into template and apply
+#             envsubst < k8s/$app_name/deployment.yml | kubectl apply -f -
+#             kubectl apply -f k8s/$app_name/service.yml
+#             kubectl apply -f k8s/$app_name/ingress.yml
+#           done
           
