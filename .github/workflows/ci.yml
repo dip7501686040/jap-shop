@@ -1,93 +1,75 @@
-# name: Docker CI
+name: Docker CI
 
-# on:
-#   push:
-#     branches:
-#       - dev
-#   pull_request:
-#     branches:
-#       - dev
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
 
-# jobs:
-#   docker:
-#     name: Docker CI
-#     runs-on: ubuntu-latest
-#     env:
-#       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-#       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-#     outputs:
-#       affected_apps: ${{ steps.set-affected-apps.outputs.affected_apps }}
-#       affected_apps_string: ${{ steps.set-affected-apps.outputs.affected_apps_string }}
+jobs:
+  docker:
+    name: Docker CI
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+    outputs:
+      affected_apps: ${{ steps.set-affected-apps.outputs.affected_apps }}
+      affected_apps_string: ${{ steps.set-affected-apps.outputs.affected_apps_string }}
     
-#     steps:
-#       - uses: actions/checkout@v3
-#         with:
-#           fetch-depth: 0
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-#       - uses: pnpm/action-setup@v2
-#         with:
-#           version: 8
-#           run_install: false
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
 
-#       - uses: actions/setup-node@v4
-#         with:
-#           node-version: '18'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
 
-#       - name: Install Turborepo CLI globally
-#         run: npm install -g turbo
+      - name: Install Turborepo CLI globally
+        run: npm install -g turbo
 
-#       - name: Log in to Docker Hub
-#         run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - name: Log in to Docker Hub
+        run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
-#       - name: Set commit ID as tag
-#         id: set-tag
-#         run: |
-#           COMMIT_ID=$(git rev-parse --short HEAD)
-#           echo "COMMIT_ID=$COMMIT_ID" >> $GITHUB_ENV
-#           echo "Using commit ID as tag: $COMMIT_ID"
+      - name: Determine base commit
+        id: base
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA=$(git merge-base origin/dev HEAD)
+            echo "git merge-base origin/dev HEAD: $BASE_SHA"
+          else
+            BASE_SHA=$(git rev-parse HEAD^)
+            echo "git rev-parse HEAD^: $BASE_SHA"
+          fi
+          echo "BASE_SHA=$BASE_SHA" >> $GITHUB_ENV
+          echo "Base commit: $BASE_SHA"
 
-#       - name: Determine base commit
-#         id: base
-#         run: |
-#           if [ "${{ github.event_name }}" = "pull_request" ]; then
-#             BASE_SHA=$(git merge-base origin/dev HEAD)
-#             echo "git merge-base origin/dev HEAD: $BASE_SHA"
-#           else
-#             BASE_SHA=$(git rev-parse HEAD^)
-#             echo "git rev-parse HEAD^: $BASE_SHA"
-#           fi
-#           echo "BASE_SHA=$BASE_SHA" >> $GITHUB_ENV
-#           echo "Base commit: $BASE_SHA"
+      - name: Determine affected apps
+        id: set-affected-apps
+        run: |
+          AFFECTED=$(TURBO_SCM_BASE=$BASE_SHA turbo ls --affected --output=json | jq -c '[.packages.items[].name]')
+          echo "Affected apps: $AFFECTED"
+          echo "affected_apps=$AFFECTED" >> $GITHUB_OUTPUT
+          echo "affected_apps_string=$(echo "$AFFECTED" | jq -r '. | join(" ")')" >> $GITHUB_OUTPUT
 
-#       - name: Determine affected apps
-#         id: set-affected-apps
-#         run: |
-#           AFFECTED=$(TURBO_SCM_BASE=$BASE_SHA turbo ls --affected --output=json | jq -c '[.packages.items[].name]')
-#           echo "Affected apps: $AFFECTED"
-#           echo "affected_apps=$AFFECTED" >> $GITHUB_OUTPUT
-#           echo "affected_apps_string=$(echo "$AFFECTED" | jq -r '. | join(" ")')" >> $GITHUB_OUTPUT
+      - name: Build Docker Images for Affected Apps
+        run: |
+          for app in ${{ steps.set-affected-apps.outputs.affected_apps_string }}; do
+            echo "Building Docker image for $app"
+            docker build -t $DOCKER_USERNAME/jap-shop-${app}:production ./apps/$app
+          done
 
-#       - name: Build Docker Images for Affected Apps
-#         run: |
-#           for app in ${{ steps.set-affected-apps.outputs.affected_apps_string }}; do
-#             echo "Building Docker image for $app"
-#             docker build -t $DOCKER_USERNAME/jap-shop-${app}:${COMMIT_ID} ./apps/$app
-#           done
-
-#       - name: Push Docker Images for Affected Apps
-#         run: |
-#           for app in ${{ steps.set-affected-apps.outputs.affected_apps_string }}; do
-#             echo "Pushing Docker image for $app"
-#             docker push $DOCKER_USERNAME/jap-shop-${app}:${COMMIT_ID}
-#           done
-
-#       - name: Create affected apps artifact file
-#         run: |
-#           echo '${{ steps.set-affected-apps.outputs.affected_apps }}' > affected-apps.json
-
-#       - name: Upload affected apps as artifact
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: affected-apps
-#           path: affected-apps.json
-#           retention-days: 1
+      - name: Push Docker Images for Affected Apps
+        run: |
+          for app in ${{ steps.set-affected-apps.outputs.affected_apps_string }}; do
+            echo "Pushing Docker image for $app"
+            docker push $DOCKER_USERNAME/jap-shop-${app}:production
+          done
